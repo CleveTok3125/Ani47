@@ -64,7 +64,7 @@ class AnimePlayer:
 
 
 def main():
-    host = 'anime47.cam'
+    host = 'anime47.dev'
     hsize, wsize = (480, 640)
 
     if check_connection(f'https://{host}/'):
