@@ -30,7 +30,7 @@ def fetch(host, js_code):
 			video_url = match.group(0)
 			return (anime_name, video_url)
 		else:
-			print("Video format not supported.")
+			print("This is a warning, not an error when running the program: Video format not supported.")
 			return False
 	else:
 		print("Request failed:", response.status_code)
@@ -84,7 +84,7 @@ def eps(host, path):
 		return False
 	url = urljoin(base, ep1)
 	sauce = get_source(url)
-	pattern = r'''<a\s+href="([^"]+)"[^>]*(?=\s+class="[^"]*(?:active\s+)?btn-episode[^"]*")[^>]*>(.*?)<\/a>'''
+	pattern = r'''<a[^>]*\s+href="([^"]+)"[^>]*(?=\s+class="[^"]*(?:active\s+)?btn-episode[^"]*")[^>]*>(.*?)<\/a>'''
 	episodes = {}
 	matches = re.findall(pattern, sauce)
 	for href, episode in matches:
@@ -125,7 +125,7 @@ def menudict(items, ask=None, presel=False):
 		if presel == False:
 			for i in range(length):
 				key, value = items[i]
-				print(f'{i+1}. Episode {key}')
+				print(f'{i+1}. Ep {key}')
 		try:
 			ans = int(input('Select one: ')) if presel == False else presel
 			if 1 <= ans <= length:

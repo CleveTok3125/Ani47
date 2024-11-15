@@ -1,6 +1,6 @@
 from _lib import *
 from urllib.parse import urljoin
-import time
+import time, os
 
 class AnimePlayer:
 	def __init__(self, host, hsize, wsize):
@@ -23,18 +23,28 @@ class AnimePlayer:
 			js_code = get_source(self.url)
 			anime_name, video_url = fetch(self.host, js_code)
 			clscr()
+			print('''Video player gesture instructions:
+- Pause: double click
+- Skip forward 10s: click on the left
+- Skip forward 10s: click on the right
+- Skip forward 85s (skip OP/EN): click on the top
+- Move window: drag the rest''')
 			player(anime_name, video_url, self.hsize, self.wsize)
+			self.show_actions_menu()
 
 	def show_actions_menu(self):
-		opts = menu(ask=f'{self.title}\nCurrent Episode: {self.ep_selected}', items=['Previous Episode', 'Next Episode', 'Search Anime'])
+		opts = menu(ask=f'{self.title}\nCurrent Episode: {self.ep_selected}', items=['Previous Episode', 'Next Episode', 'Search Anime', 'Exit'])
 		if opts == 0:  # Previous
 			self.previous_episode()
 		elif opts == 1:  # Next
 			self.next_episode()
 		elif opts == 2:  # Search
 			self.search_anime()
+		elif opts == 3:
+			os._exit(0)
 		else:
 			self.show_actions_menu()
+
 	def previous_episode(self):
 		if self.ep_selected == 1:
 			input('No previous episode')
@@ -63,10 +73,9 @@ class AnimePlayer:
 			player(anime_name, video_url, self.hsize, self.wsize)
 			self.show_actions_menu()
 
-
 def main():
 	host = 'anime47.cam'
-	hsize, wsize = (480, 640)
+	hsize, wsize = (545, 900)
 
 	if check_connection(f'https://{host}/'):
 		time.sleep(0.5)
@@ -76,8 +85,6 @@ def main():
 
 	anime_player = AnimePlayer(host, hsize, wsize)
 	anime_player.search_anime()
-	anime_player.show_actions_menu()
-
 
 if __name__ == '__main__':
 	main()
