@@ -1,24 +1,10 @@
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
 from urllib.parse import urlparse
 from urllib.parse import urljoin
-import os
-import requests, re, ast, webview
+import requests, re, ast, webview, os
 
 def get_source(url):
-	chrome_options = Options()
-	chrome_options.add_argument("--headless=new")
-	chrome_options.add_argument("--disable-gpu")
-	chrome_options.add_argument("--no-sandbox")
-	chrome_options.add_argument("--disable-dev-shm-usage")
-	chrome_options.add_argument("--enable-unsafe-swiftshader")
-	chrome_options.add_argument("--disable-images")
-	chrome_options.add_argument('--log-level=2')
-	driver = webdriver.Chrome(options=chrome_options)
-	driver.get(url)
-	source = driver.page_source
-	driver.quit()
-	return source
+	r = requests.get(url)
+	return r.content.decode('utf-8')
 
 def fetch(host, js_code):
 	anime_name = None

@@ -48,7 +48,7 @@ def menudict(ask, items):
 
 def main():
 	#####################
-	host = 'anime47.dev'#
+	host = 'anime47.cam'#
 	#####################
 	
 	query = str(input('Search anime: '))
