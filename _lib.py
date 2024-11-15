@@ -1,6 +1,6 @@
 from urllib.parse import urlparse
 from urllib.parse import urljoin
-import requests, re, ast, webview, os
+import requests, re, ast, webview, os, sys
 
 def get_source(url):
 	r = requests.get(url)
@@ -90,3 +90,65 @@ def eps(host, path):
 	for href, episode in matches:
 		episodes[episode] = urljoin(base, href)
 	return episodes
+
+def clscr():
+	if sys.platform == "win32":
+		os.system("cls")
+	else:
+		os.system("clear")
+
+def menu(items, ask=None):
+	items = list(items)
+	length = len(items)
+	items = [f"{index}. {item}" for index, item in enumerate(items, start=1)]
+	while True:
+		clscr()
+		if ask != None:
+			print(ask)
+		print('\n'.join(items))
+		try:
+			ans = int(input('Select one: '))
+			if ans > 0 and ans <= length:
+				return ans-1
+			else:
+				input('Invalid choice')
+		except ValueError:
+			input('Invalid input. Please enter a number')
+
+def menudict(items, ask=None, presel=False):
+	items = list(items.items())
+	length = len(items)
+	while True:
+		clscr()
+		if ask != None:
+			print(ask)
+		if presel == False:
+			for i in range(length):
+				key, value = items[i]
+				print(f'{i+1}. Episode {key}')
+		try:
+			ans = int(input('Select one: ')) if presel == False else presel
+			if 1 <= ans <= length:
+				key, value = items[ans - 1]
+				return value, ans, length
+			else:
+				input('Invalid choice')
+		except ValueError:
+			input('Invalid input. Please enter a number')
+
+def check_connection(url):
+	print('Checking connection...')
+	try:
+		response = requests.get(url, timeout=5)
+		if response.status_code == 200:
+			print("Connection successful!")
+			return True
+		else:
+			print(f"Error: Status code {response.status_code}")
+	except requests.ConnectionError:
+		print("Unable to connect to the network.")
+	except requests.Timeout:
+		print("Connection timed out.")
+	except requests.RequestException as e:
+		print(f"An error occurred: {e}")
+	return False
