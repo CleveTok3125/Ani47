@@ -26,14 +26,15 @@ class AnimePlayer:
 			player(anime_name, video_url, self.hsize, self.wsize)
 
 	def show_actions_menu(self):
-		opts = menu(items=['Previous Episode', 'Next Episode', 'Search Anime'])
+		opts = menu(ask=f'{self.title}\nCurrent Episode: {self.ep_selected}', items=['Previous Episode', 'Next Episode', 'Search Anime'])
 		if opts == 0:  # Previous
 			self.previous_episode()
 		elif opts == 1:  # Next
 			self.next_episode()
 		elif opts == 2:  # Search
 			self.search_anime()
-
+		else:
+			self.show_actions_menu()
 	def previous_episode(self):
 		if self.ep_selected == 1:
 			input('No previous episode')
