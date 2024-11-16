@@ -1,6 +1,12 @@
 from urllib.parse import urlparse
 from urllib.parse import urljoin
-import requests, re, ast, webview, os, sys
+import requests, re, ast, os, sys
+
+try:
+	import webview
+	wv_supported = True
+except:
+	wv_supported = False
 
 def get_source(url):
 	r = requests.get(url)
@@ -40,6 +46,9 @@ def player(anime_name, video_url, hsize, wsize):
 	html_file = os.path.normpath('./player.html')
 	temp_html = os.path.normpath('./temp.player.html')
 
+	if os.path.exists(temp_html):
+		os.remove(temp_html)
+
 	with open(html_file, 'r', encoding='utf-8') as file:
 		html_content = file.read()
 	html_content = html_content.replace("{{video_url}}", video_url)
@@ -47,9 +56,12 @@ def player(anime_name, video_url, hsize, wsize):
 	with open(temp_html, 'w', encoding='utf-8') as file:
 		file.write(html_content)
 
-	window = webview.create_window(anime_name, temp_html, width=wsize, height=hsize, resizable=True, easy_drag=True)
-	webview.start()
-
+	if wv_supported:
+		window = webview.create_window(anime_name, temp_html, width=wsize, height=hsize, resizable=True, easy_drag=True)
+		webview.start()
+	else:
+		print(f'Pywebview is not supported. Access player via "{temp_html}"')
+		input('Press Enter to end session')
 	os.remove(temp_html)
 
 def search(host, query):
