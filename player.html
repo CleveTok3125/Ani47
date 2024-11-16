@@ -39,63 +39,67 @@
 				video.play();
 			});
 
-			video.addEventListener('click', function(event) {
-				const videoWidth = video.offsetWidth;
-				const videoHeight = video.offsetHeight;
-				const clickX = event.offsetX;
-				const clickY = event.offsetY;
+			var isFeatureEnabled = true;
 
-				if (clickY < videoHeight * 0.2) {
-					video.currentTime += 85;
-				} 
-				else if (clickX < videoWidth * 0.2) {
-					video.currentTime -= 10;
-				} 
-				else if (clickX > videoWidth * 0.8) {
-					video.currentTime += 10;
-				}
-			});
+			if (isFeatureEnabled) {
+				video.addEventListener('click', function(event) {
+					const videoWidth = video.offsetWidth;
+					const videoHeight = video.offsetHeight;
+					const clickX = event.offsetX;
+					const clickY = event.offsetY;
 
-			let isHolding = false;
-			let holdTimer;
+					if (clickY < videoHeight * 0.2) {
+						video.currentTime += 85;
+					} 
+					else if (clickX < videoWidth * 0.2) {
+						video.currentTime -= 10;
+					} 
+					else if (clickX > videoWidth * 0.8) {
+						video.currentTime += 10;
+					}
+				});
 
-			video.addEventListener('mousedown', function(event) {
-				const videoWidth = video.offsetWidth;
-				const clickX = event.offsetX;
+				let isHolding = false;
+				let holdTimer;
 
-				if (clickX > videoWidth * 0.8) {
-					holdTimer = setTimeout(function() {
-						video.playbackRate = 2;
-						isHolding = true;
-					}, 1000); // 1000ms = 1s
-				}
-			});
+				video.addEventListener('mousedown', function(event) {
+					const videoWidth = video.offsetWidth;
+					const clickX = event.offsetX;
 
-			video.addEventListener('mouseup', function() {
-				if (isHolding) {
-					video.playbackRate = 1;
-					video.currentTime -= 10;
-					isHolding = false;
-				}
-				clearTimeout(holdTimer);
-			});
+					if (clickX > videoWidth * 0.8) {
+						holdTimer = setTimeout(function() {
+							video.playbackRate = 2;
+							isHolding = true;
+						}, 1000); // 1000ms = 1s
+					}
+				});
 
-			video.addEventListener('mouseleave', function() {
-				if (isHolding) {
-					video.playbackRate = 1;
-					video.currentTime -= 10;
-					isHolding = false;
-				}
-				clearTimeout(holdTimer);
-			});
+				video.addEventListener('mouseup', function() {
+					if (isHolding) {
+						video.playbackRate = 1;
+						video.currentTime -= 10;
+						isHolding = false;
+					}
+					clearTimeout(holdTimer);
+				});
 
-			video.addEventListener('dblclick', function() {
-				if (video.paused) {
-					video.play();
-				} else {
-					video.pause();
-				}
-			});
+				video.addEventListener('mouseleave', function() {
+					if (isHolding) {
+						video.playbackRate = 1;
+						video.currentTime -= 10;
+						isHolding = false;
+					}
+					clearTimeout(holdTimer);
+				});
+
+				video.addEventListener('dblclick', function() {
+					if (video.paused) {
+						video.play();
+					} else {
+						video.pause();
+					}
+				});
+			}
 		} else {
 			console.error("HLS.js not supported in this browser.");
 		}
