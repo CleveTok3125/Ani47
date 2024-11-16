@@ -25,10 +25,11 @@ class AnimePlayer:
 			clscr()
 			print('''Video player gesture instructions:
 - Play/Pause: double click
-- Skip forward 10s: click on the left
-- Skip forward 10s: click on the right
-- Skip forward 85s (skip OP/EN): click on the top
-- Move window: drag the rest''')
+- Backward 10s: click left side
+- Forward 10s: click right side
+- Fast forward x2: Hold (1sec) right side
+- Forward 85s (skip OP/EN): click top side
+- Move window: drag down side''')
 			player(anime_name, video_url, self.hsize, self.wsize)
 			self.show_actions_menu()
 

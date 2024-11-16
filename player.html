@@ -56,6 +56,39 @@
 				}
 			});
 
+			let isHolding = false;
+			let holdTimer;
+
+			video.addEventListener('mousedown', function(event) {
+				const videoWidth = video.offsetWidth;
+				const clickX = event.offsetX;
+
+				if (clickX > videoWidth * 0.8) {
+					holdTimer = setTimeout(function() {
+						video.playbackRate = 2;
+						isHolding = true;
+					}, 1000); // 1000ms = 1s
+				}
+			});
+
+			video.addEventListener('mouseup', function() {
+				if (isHolding) {
+					video.playbackRate = 1;
+					video.currentTime -= 10;
+					isHolding = false;
+				}
+				clearTimeout(holdTimer);
+			});
+
+			video.addEventListener('mouseleave', function() {
+				if (isHolding) {
+					video.playbackRate = 1;
+					video.currentTime -= 10;
+					isHolding = false;
+				}
+				clearTimeout(holdTimer);
+			});
+
 			video.addEventListener('dblclick', function() {
 				if (video.paused) {
 					video.play();
