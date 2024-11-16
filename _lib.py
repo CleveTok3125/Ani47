@@ -52,7 +52,9 @@ def player(anime_name, video_url, hsize, wsize):
 	with open(html_file, 'r', encoding='utf-8') as file:
 		html_content = file.read()
 	html_content = html_content.replace("{{video_url}}", video_url)
-
+	if not wv_supported:
+		html_content = html_content.replace('controlsList="nofullscreen"', '')
+		
 	with open(temp_html, 'w', encoding='utf-8') as file:
 		file.write(html_content)
 
