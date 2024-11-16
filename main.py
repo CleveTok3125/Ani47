@@ -24,7 +24,7 @@ class AnimePlayer:
 			anime_name, video_url = fetch(self.host, js_code)
 			clscr()
 			print('''Video player gesture instructions:
-- Pause: double click
+- Play/Pause: double click
 - Skip forward 10s: click on the left
 - Skip forward 10s: click on the right
 - Skip forward 85s (skip OP/EN): click on the top
