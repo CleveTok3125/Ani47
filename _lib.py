@@ -1,6 +1,6 @@
-from urllib.parse import urlparse
-from urllib.parse import urljoin
-import requests, re, ast, os, sys
+from urllib.parse import urljoin, urlparse
+from datetime import datetime
+import requests, re, ast, os, sys, json
 
 try:
 	import webview
@@ -47,7 +47,12 @@ def player(anime_name, video_url, hsize, wsize):
 	temp_html = os.path.normpath('./temp.player.html')
 
 	if os.path.exists(temp_html):
-		os.remove(temp_html)
+		def force_remove(temp_html):
+			try:
+				os.remove(temp_html)
+			except:
+				input(f'Please close all {os.path.join(os.getcwd(), temp_html)} related tasks.\n')
+				force_remove(temp_html)
 
 	with open(html_file, 'r', encoding='utf-8') as file:
 		html_content = file.read()
@@ -63,7 +68,7 @@ def player(anime_name, video_url, hsize, wsize):
 		window = webview.create_window(anime_name, temp_html, width=wsize, height=hsize, resizable=True, easy_drag=True)
 		webview.start()
 	else:
-		print(f'Pywebview is not supported. Access player via "{os.path.join(os.getcwd(), temp_html)}"')
+		print(f'''Pywebview is not supported. Access player via "{os.path.join(os.getcwd(), temp_html)}"''')
 		input('Press Enter to end session\n')
 	os.remove(temp_html)
 
@@ -167,3 +172,53 @@ def check_connection(url):
 	except requests.RequestException as e:
 		print(f"An error occurred: {e}")
 	return False
+
+def handle_anime_history(anime_name, ep_list, ep_selected, code, filename=os.path.normpath("./history.json")):
+	ep_list = list(ep_list.keys())
+	
+	try:
+		with open(filename, "r", encoding="utf-8") as file:
+			anime_dict = json.load(file)
+	except FileNotFoundError:
+		anime_dict = {}
+
+	watching = ep_list[ep_selected - 1]
+
+	anime_info = {
+		"Name": anime_name,
+		"Code": code,
+		"Watching": watching,
+		"Episodes": ep_list,
+		"Time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+	}
+
+	existing_anime = next((anime for anime in anime_dict.values() if anime["Code"] == code), None)
+
+	if existing_anime is None:
+		anime_dict[len(anime_dict)] = anime_info
+	else:
+		if existing_anime["Watching"] != watching:
+			existing_anime["Watching"] = watching
+
+	with open(filename, "w", encoding="utf-8") as file:
+		json.dump(anime_dict, file, ensure_ascii=False, indent=4)
+
+def get_watching_status(code, filename="history.json"):
+    try:
+        with open(filename, "r", encoding="utf-8") as file:
+            anime_dict = json.load(file)
+    except FileNotFoundError:
+        return None
+    for anime in anime_dict.values():
+        if anime["Code"] == code:
+            return anime["Watching"]
+    return None
+
+def last_viewed(filename="history.json"):
+	try:
+		with open(filename, "r", encoding="utf-8") as file:
+			anime_data = json.load(file)
+		max_index = max(anime_data.keys(), key=int)
+	except:
+		return None
+	return anime_data[max_index]
