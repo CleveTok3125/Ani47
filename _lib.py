@@ -43,6 +43,8 @@ def fetch(host, js_code):
 		return False
 
 def player(anime_name, video_url, hsize, wsize):
+	print(f'Playing {anime_name}...')
+
 	html_file = os.path.normpath('./player.html')
 	temp_html = os.path.normpath('./temp.player.html')
 
@@ -73,21 +75,18 @@ def player(anime_name, video_url, hsize, wsize):
 	os.remove(temp_html)
 
 def search(host, query):
-	def search_by_query(query):
-		for title, href in movie_dict.items():
-			if query.lower() in title.lower():
-				return {title: href}
-		return None
+	def search_by_query(query, movie_dict):
+		result = {title: href for title, href in movie_dict.items() if query.lower() in title.lower()}
+		return result
 
 	pattern = r'<a\s+class="movie-item\s+m-block"[^>]*\s+title="([^"]+)"\s+href="([^"]+)"[^>]*>'
 	url = f'https://{host}/tim-nang-cao/?keyword={query}'
 	source = get_source(url)
 	matches = re.findall(pattern, source)
 	movie_dict = {match[0]: match[1] for match in matches}
-	result = search_by_query(query)
+	result = search_by_query(query, movie_dict)
 	if result:
-		for title, href in result.items():
-			return title, href
+		return result
 	else:
 		return False
 
@@ -135,7 +134,7 @@ def menu(items, ask=None):
 		except ValueError:
 			input('Invalid input. Please enter a number')
 
-def menudict(items, ask=None, presel=False):
+def menudict(items, ask=None, presel=False, default='Ep ', reback=True):
 	items = list(items.items())
 	length = len(items)
 	while True:
@@ -143,14 +142,18 @@ def menudict(items, ask=None, presel=False):
 		if ask != None:
 			print(ask)
 		if presel == False:
+			if reback == True:
+				print('0. Back')
 			for i in range(length):
 				key, value = items[i]
-				print(f'{i+1}. Ep {key}')
+				print(f'{i+1}. {default}{key}')
 		try:
 			ans = int(input('Select one: ')) if presel == False else presel
 			if 1 <= ans <= length:
 				key, value = items[ans - 1]
 				return value, ans, length
+			elif ans == 0 and reback == True:
+				return value, -1, length
 			else:
 				input('Invalid choice')
 		except ValueError:
@@ -175,6 +178,7 @@ def check_connection(url):
 
 def handle_anime_history(anime_name, ep_list, ep_selected, code, filename=os.path.normpath("./history.json")):
 	ep_list = list(ep_list.keys())
+	watching = ep_list[ep_selected - 1]
 	
 	try:
 		with open(filename, "r", encoding="utf-8") as file:
@@ -182,19 +186,16 @@ def handle_anime_history(anime_name, ep_list, ep_selected, code, filename=os.pat
 	except FileNotFoundError:
 		anime_dict = {}
 
-	watching = ep_list[ep_selected - 1]
-
-	anime_info = {
-		"Name": anime_name,
-		"Code": code,
-		"Watching": watching,
-		"Episodes": ep_list,
-		"Time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-	}
-
 	existing_anime = next((anime for anime in anime_dict.values() if anime["Code"] == code), None)
 
 	if existing_anime is None:
+		anime_info = {
+			"Name": anime_name,
+			"Code": code,
+			"Watching": watching,
+			"Episodes": ep_list,
+			"Time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+		}
 		anime_dict[len(anime_dict)] = anime_info
 	else:
 		if existing_anime["Watching"] != watching:
@@ -205,15 +206,15 @@ def handle_anime_history(anime_name, ep_list, ep_selected, code, filename=os.pat
 		json.dump(anime_dict, file, ensure_ascii=False, indent=4)
 
 def get_watching_status(code, filename=os.path.normpath("./history.json")):
-    try:
-        with open(filename, "r", encoding="utf-8") as file:
-            anime_dict = json.load(file)
-    except FileNotFoundError:
-        return None
-    for anime in anime_dict.values():
-        if anime["Code"] == code:
-            return anime["Watching"]
-    return None
+	try:
+		with open(filename, "r", encoding="utf-8") as file:
+			anime_dict = json.load(file)
+	except FileNotFoundError:
+		return None
+	for anime in anime_dict.values():
+		if anime["Code"] == code:
+			return anime["Watching"]
+	return None
 
 def last_viewed(filename=os.path.normpath("./history.json")):
 	try:

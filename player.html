@@ -99,6 +99,46 @@
 						video.pause();
 					}
 				});
+
+				video.addEventListener('keydown', function(event) {
+					if (event.key.toLowerCase() === 'w') {
+						if (video) {
+							video.currentTime += 85;
+							if (video.currentTime > video.duration) {
+								video.currentTime = video.duration;
+							}
+						}
+					} else if (event.key.toLowerCase() === 'a') {
+						video.currentTime -= 10;
+					} else if (event.key.toLowerCase() === 'd') {
+						video.currentTime += 10;
+					} else if (event.key.toLowerCase() === 's') {
+						if (video.paused) {
+							video.play();
+						} else {
+							video.pause();
+						}
+					}
+				});
+
+				video.addEventListener('keydown', function(event) {
+					if (event.key.toLowerCase() === 'f' && !isHolding) {
+						holdTimer = setTimeout(function() {
+							video.playbackRate = 2;
+							isHolding = true;
+						}, 1000);
+					}
+				});
+
+				video.addEventListener('keyup', function(event) {
+					if (event.key.toLowerCase() === 'f') {
+						clearTimeout(holdTimer);
+						if (isHolding) {
+							video.playbackRate = 1;
+							isHolding = false;
+						}
+					}
+				});
 			}
 		} else {
 			console.error("HLS.js not supported in this browser.");
