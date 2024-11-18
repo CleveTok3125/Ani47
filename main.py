@@ -11,14 +11,17 @@ class AnimePlayer:
 		self.total_ep = 0
 		self.title = ''
 		self.ep_list = []
+		self.code = ''
 
 	def search_anime(self):
 		query = str(input('Search Anime: '))
 		result = search(self.host, query)
 		if result != False:
 			self.title, href = result
+			self.code = href.split('/')[-1].split('.')[0]
 			self.ep_list = eps(self.host, href)
-			self.url, self.ep_selected, self.total_ep = menudict(ask=self.title, items=self.ep_list)
+			watched = get_watching_status(self.code)
+			self.url, self.ep_selected, self.total_ep = menudict(ask=f'{self.title}\nLast watched episode: {watched}' if watched != None else self.title, items=self.ep_list)
 			self.url = urljoin(f'https://{self.host}/', self.url)
 			js_code = get_source(self.url)
 			anime_name, video_url = fetch(self.host, js_code)
@@ -30,6 +33,7 @@ class AnimePlayer:
 - Fast forward x2: Hold (1sec) right side
 - Forward 85s (skip OP/EN): click top side
 - Move window: drag down side''')
+			handle_anime_history(self.title, self.ep_list, self.ep_selected, self.code)
 			player(anime_name, video_url, self.hsize, self.wsize)
 			self.show_actions_menu()
 
@@ -57,6 +61,7 @@ class AnimePlayer:
 			js_code = get_source(self.url)
 			anime_name, video_url = fetch(self.host, js_code)
 			clscr()
+			handle_anime_history(self.title, self.ep_list, self.ep_selected, self.code)
 			player(anime_name, video_url, self.hsize, self.wsize)
 			self.show_actions_menu()
 
@@ -71,6 +76,7 @@ class AnimePlayer:
 			js_code = get_source(self.url)
 			anime_name, video_url = fetch(self.host, js_code)
 			clscr()
+			handle_anime_history(self.title, self.ep_list, self.ep_selected, self.code)
 			player(anime_name, video_url, self.hsize, self.wsize)
 			self.show_actions_menu()
 
@@ -85,6 +91,9 @@ def main():
 		return check_connection
 
 	anime_player = AnimePlayer(host, hsize, wsize)
+	in4 = last_viewed()
+	if in4:
+		print(f'''Last watched: {in4['Name']}\nEpisode: {in4['Watching']}\nTime: {in4['Time']}''')
 	anime_player.search_anime()
 
 if __name__ == '__main__':
