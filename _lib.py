@@ -63,8 +63,8 @@ def player(anime_name, video_url, hsize, wsize):
 		window = webview.create_window(anime_name, temp_html, width=wsize, height=hsize, resizable=True, easy_drag=True)
 		webview.start()
 	else:
-		print(f'Pywebview is not supported. Access player via "{temp_html}"')
-		input('Press Enter to end session')
+		print(f'Pywebview is not supported. Access player via "{os.path.join(os.getcwd(), temp_html)}"')
+		input('Press Enter to end session\n')
 	os.remove(temp_html)
 
 def search(host, query):
