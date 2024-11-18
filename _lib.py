@@ -175,6 +175,7 @@ def check_connection(url):
 
 def handle_anime_history(anime_name, ep_list, ep_selected, code, filename=os.path.normpath("./history.json")):
 	ep_list = list(ep_list.keys())
+	watching = ep_list[ep_selected - 1]
 	
 	try:
 		with open(filename, "r", encoding="utf-8") as file:
@@ -182,19 +183,16 @@ def handle_anime_history(anime_name, ep_list, ep_selected, code, filename=os.pat
 	except FileNotFoundError:
 		anime_dict = {}
 
-	watching = ep_list[ep_selected - 1]
-
-	anime_info = {
-		"Name": anime_name,
-		"Code": code,
-		"Watching": watching,
-		"Episodes": ep_list,
-		"Time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-	}
-
 	existing_anime = next((anime for anime in anime_dict.values() if anime["Code"] == code), None)
 
 	if existing_anime is None:
+		anime_info = {
+			"Name": anime_name,
+			"Code": code,
+			"Watching": watching,
+			"Episodes": ep_list,
+			"Time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+		}
 		anime_dict[len(anime_dict)] = anime_info
 	else:
 		if existing_anime["Watching"] != watching:
