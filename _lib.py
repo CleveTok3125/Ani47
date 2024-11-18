@@ -203,7 +203,7 @@ def handle_anime_history(anime_name, ep_list, ep_selected, code, filename=os.pat
 	with open(filename, "w", encoding="utf-8") as file:
 		json.dump(anime_dict, file, ensure_ascii=False, indent=4)
 
-def get_watching_status(code, filename="history.json"):
+def get_watching_status(code, filename=os.path.normpath("./history.json")):
     try:
         with open(filename, "r", encoding="utf-8") as file:
             anime_dict = json.load(file)
@@ -214,7 +214,7 @@ def get_watching_status(code, filename="history.json"):
             return anime["Watching"]
     return None
 
-def last_viewed(filename="history.json"):
+def last_viewed(filename=os.path.normpath("./history.json")):
 	try:
 		with open(filename, "r", encoding="utf-8") as file:
 			anime_data = json.load(file)
