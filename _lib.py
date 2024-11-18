@@ -199,6 +199,7 @@ def handle_anime_history(anime_name, ep_list, ep_selected, code, filename=os.pat
 	else:
 		if existing_anime["Watching"] != watching:
 			existing_anime["Watching"] = watching
+		existing_anime["Time"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 	with open(filename, "w", encoding="utf-8") as file:
 		json.dump(anime_dict, file, ensure_ascii=False, indent=4)
