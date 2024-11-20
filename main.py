@@ -12,40 +12,54 @@ class AnimePlayer:
 		self.title = ''
 		self.ep_list = []
 		self.code = ''
+		self.anime_name = ''
+		self.video_url = ''
 
 	def search_anime(self):
 		query = str(input('Search Anime: '))
 		result = search(self.host, query)
 		if result != False:
-			self.title, href = result
+			href, self.title, _ = menudict(items=result, default='')
+			if self.title == -1:
+				clscr()
+				self.search_anime()
+			self.title = list(result.keys())[self.title-1]
 			self.code = href.split('/')[-1].split('.')[0]
 			self.ep_list = eps(self.host, href)
 			watched = get_watching_status(self.code)
 			self.url, self.ep_selected, self.total_ep = menudict(ask=f'{self.title}\nLast watched episode: {watched}' if watched != None else self.title, items=self.ep_list)
+			if self.ep_selected == -1:
+				clscr()
+				self.search_anime()
 			self.url = urljoin(f'https://{self.host}/', self.url)
 			js_code = get_source(self.url)
-			anime_name, video_url = fetch(self.host, js_code)
+			self.anime_name, self.video_url = fetch(self.host, js_code)
 			clscr()
 			print('''Video player gesture instructions:
-- Play/Pause: double click
-- Backward 10s: click left side
-- Forward 10s: click right side
-- Fast forward x2: Hold (1sec) right side
-- Forward 85s (skip OP/EN): click top side
+- Play/Pause: double click (S)
+- Backward 10s: click left side (A)
+- Forward 10s: click right side (D)
+- Fast forward x2: Hold (1sec) right side (Hold F)
+- Forward 85s (skip OP/EN): click top side (W)
 - Move window: drag down side''')
 			handle_anime_history(self.title, self.ep_list, self.ep_selected, self.code)
-			player(anime_name, video_url, self.hsize, self.wsize)
+			player(self.anime_name, self.video_url, self.hsize, self.wsize)
 			self.show_actions_menu()
 
 	def show_actions_menu(self):
-		opts = menu(ask=f'{self.title}\nCurrent Episode: {self.ep_selected}', items=['Previous Episode', 'Next Episode', 'Search Anime', 'Exit'])
+		opts = menu(ask=f'{self.title}\nCurrent Episode: {self.ep_selected}', items=['Previous Episode', 'Next Episode', 'Replay', 'Search Anime', 'Exit'])
 		if opts == 0:  # Previous
 			self.previous_episode()
 		elif opts == 1:  # Next
 			self.next_episode()
-		elif opts == 2:  # Search
+		elif opts == 2:  # Replay
+			clscr()
+			handle_anime_history(self.title, self.ep_list, self.ep_selected, self.code)
+			player(self.anime_name, self.video_url, self.hsize, self.wsize)
+			self.show_actions_menu()
+		elif opts == 3:  # Search
 			self.search_anime()
-		elif opts == 3:
+		elif opts == 4:
 			os._exit(0)
 		else:
 			self.show_actions_menu()
@@ -59,10 +73,10 @@ class AnimePlayer:
 			self.url, self.ep_selected, self.total_ep = menudict(ask=None, items=self.ep_list, presel=self.ep_selected)
 			self.url = urljoin(f'https://{self.host}/', self.url)
 			js_code = get_source(self.url)
-			anime_name, video_url = fetch(self.host, js_code)
+			self.anime_name, self.video_url = fetch(self.host, js_code)
 			clscr()
 			handle_anime_history(self.title, self.ep_list, self.ep_selected, self.code)
-			player(anime_name, video_url, self.hsize, self.wsize)
+			player(self.anime_name, self.video_url, self.hsize, self.wsize)
 			self.show_actions_menu()
 
 	def next_episode(self):
@@ -74,10 +88,10 @@ class AnimePlayer:
 			self.url, self.ep_selected, self.total_ep = menudict(ask=None, items=self.ep_list, presel=self.ep_selected)
 			self.url = urljoin(f'https://{self.host}/', self.url)
 			js_code = get_source(self.url)
-			anime_name, video_url = fetch(self.host, js_code)
+			self.anime_name, self.video_url = fetch(self.host, js_code)
 			clscr()
 			handle_anime_history(self.title, self.ep_list, self.ep_selected, self.code)
-			player(anime_name, video_url, self.hsize, self.wsize)
+			player(self.anime_name, self.video_url, self.hsize, self.wsize)
 			self.show_actions_menu()
 
 def main():
