@@ -220,7 +220,7 @@ def last_viewed(filename=os.path.normpath("./history.json")):
 	try:
 		with open(filename, "r", encoding="utf-8") as file:
 			anime_data = json.load(file)
-		max_index = max(anime_data.keys(), key=int)
+		max_index = max(anime_data.values(), key=lambda x: datetime.strptime(x["Time"], "%Y-%m-%d %H:%M:%S"))
 	except:
 		return None
-	return anime_data[max_index]
+	return max_index

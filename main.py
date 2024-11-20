@@ -20,11 +20,14 @@ class AnimePlayer:
 		query = str(input('Search Anime: '))
 		result = search(self.host, query)
 		if result != False:
-			href, self.title, _ = menudict(items=result, default='')
-			if self.title == -1:
-				clscr()
-				self.search_anime()
-			self.title = list(result.keys())[self.title-1]
+			if len(result) == 1:
+			  self.title, href = next(iter(result.items()))
+			else:
+				href, self.title, _ = menudict(items=result, default='')
+				if self.title == -1:
+				  clscr()
+				  self.search_anime()
+				self.title = list(result.keys())[self.title-1]
 			self.code = href.split('/')[-1].split('.')[0]
 			self.ep_list = eps(self.host, href)
 			watched = get_watching_status(self.code)
