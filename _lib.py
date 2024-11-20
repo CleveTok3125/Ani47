@@ -36,7 +36,7 @@ def fetch(host, js_code):
 			video_url = match.group(0)
 			return (anime_name, video_url)
 		else:
-			print("This is a warning, not an error when running the program: Video format not supported.")
+			print("Video format not supported.")
 			return False
 	else:
 		print("Request failed:", response.status_code)
