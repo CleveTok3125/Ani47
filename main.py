@@ -14,7 +14,8 @@ class AnimePlayer:
 		self.code = ''
 		self.anime_name = ''
 		self.video_url = ''
-
+		self.url = ''
+		
 	def search_anime(self):
 		query = str(input('Search Anime: '))
 		result = search(self.host, query)
@@ -33,7 +34,11 @@ class AnimePlayer:
 				self.search_anime()
 			self.url = urljoin(f'https://{self.host}/', self.url)
 			js_code = get_source(self.url)
-			self.anime_name, self.video_url = fetch(self.host, js_code)
+			try:
+				self.anime_name, self.video_url = fetch(self.host, js_code)
+			except:
+				input(f'URL: {self.url}\n')
+				os._exit(404)
 			clscr()
 			print('''Video player gesture instructions:
 - Play/Pause: double click (S)
@@ -73,7 +78,11 @@ class AnimePlayer:
 			self.url, self.ep_selected, self.total_ep = menudict(ask=None, items=self.ep_list, presel=self.ep_selected)
 			self.url = urljoin(f'https://{self.host}/', self.url)
 			js_code = get_source(self.url)
-			self.anime_name, self.video_url = fetch(self.host, js_code)
+			try:
+				self.anime_name, self.video_url = fetch(self.host, js_code)
+			except:
+				input(f'URL: {self.url}\n')
+				os._exit(404)
 			clscr()
 			handle_anime_history(self.title, self.ep_list, self.ep_selected, self.code)
 			player(self.anime_name, self.video_url, self.hsize, self.wsize)
@@ -88,7 +97,11 @@ class AnimePlayer:
 			self.url, self.ep_selected, self.total_ep = menudict(ask=None, items=self.ep_list, presel=self.ep_selected)
 			self.url = urljoin(f'https://{self.host}/', self.url)
 			js_code = get_source(self.url)
-			self.anime_name, self.video_url = fetch(self.host, js_code)
+			try:
+				self.anime_name, self.video_url = fetch(self.host, js_code)
+			except:
+				input(f'URL: {self.url}\n')
+				os._exit(404)
 			clscr()
 			handle_anime_history(self.title, self.ep_list, self.ep_selected, self.code)
 			player(self.anime_name, self.video_url, self.hsize, self.wsize)
