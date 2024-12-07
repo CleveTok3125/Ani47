@@ -12,7 +12,7 @@ def get_source(url):
 	r = requests.get(url)
 	return r.content.decode('utf-8')
 
-def fetch(host, js_code):
+def fetch(host, js_code, debug):
 	anime_name = None
 	match = re.search(r'<title>(.*?)</title>', js_code)
 	if match:
@@ -37,6 +37,8 @@ def fetch(host, js_code):
 			return (anime_name, video_url)
 		else:
 			print("Video format not supported.")
+			if debug:
+				return response.text
 			return False
 	else:
 		print("Request failed:", response.status_code)
