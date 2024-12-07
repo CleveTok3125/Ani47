@@ -1,12 +1,19 @@
 from _lib import *
 from urllib.parse import urljoin
-import time, os
+import time, os, logging
+
+def pre_action(func):
+	def wrapper(self, *args, **kwargs):
+		self.log_info()
+		return func(self, *args, **kwargs)
+	return wrapper
 
 class AnimePlayer:
-	def __init__(self, host, hsize, wsize):
+	def __init__(self, host, hsize, wsize, debug):
 		self.host = host
 		self.hsize = hsize
 		self.wsize = wsize
+		self.debug = debug
 		self.ep_selected = 1
 		self.total_ep = 0
 		self.title = ''
@@ -15,9 +22,31 @@ class AnimePlayer:
 		self.anime_name = ''
 		self.video_url = ''
 		self.url = ''
-		
+
+	def log_info(self, custom_message="", custom_title=""):
+		logging.basicConfig(filename='anime_player.log', level=logging.DEBUG, format='%(asctime)s - %(message)s')
+		logging.debug("\n" + "="*50)
+		logging.debug("Host: %s", self.host)
+		logging.debug("Hsize: %s", self.hsize)
+		logging.debug("Wsize: %s", self.wsize)
+		logging.debug("Debug: %s", self.debug)
+		logging.debug("Ep Selected: %d", self.ep_selected)
+		logging.debug("Total Ep: %d", self.total_ep)
+		logging.debug("Title: %s", self.title)
+		logging.debug("Ep List: %s", self.ep_list)
+		logging.debug("Code: %s", self.code)
+		logging.debug("Anime Name: %s", self.anime_name)
+		logging.debug("Video URL: %s", self.video_url)
+		logging.debug("URL: %s", self.url)
+
+		if custom_message:
+			logging.debug(f"{custom_title}\n### BEGIN CODE ###\n{custom_message}\n### END CODE ###")
+
+	@pre_action
 	def search_anime(self):
 		query = str(input('Search Anime: '))
+		if self.debug:
+			self.log_info()
 		result = search(self.host, query)
 		if result != False:
 			if len(result) == 1:
@@ -38,7 +67,13 @@ class AnimePlayer:
 			self.url = urljoin(f'https://{self.host}/', self.url)
 			js_code = get_source(self.url)
 			try:
-				self.anime_name, self.video_url = fetch(self.host, js_code)
+				response = fetch(self.host, js_code, self.debug)
+				if response == False:
+					raise ValueError(404)
+				if type(response) != bool:
+					if self.debug:
+						self.log_info(response, "Data returned from fetch():")
+				self.anime_name, self.video_url = response
 			except:
 				input(f'URL: {self.url}\n')
 				os._exit(404)
@@ -53,8 +88,13 @@ class AnimePlayer:
 			handle_anime_history(self.title, self.ep_list, self.ep_selected, self.code)
 			player(self.anime_name, self.video_url, self.hsize, self.wsize)
 			self.show_actions_menu()
+		if self.debug:
+			self.log_info()
 
+	@pre_action
 	def show_actions_menu(self):
+		if self.debug:
+			self.log_info()
 		opts = menu(ask=f'{self.title}\nCurrent Episode: {self.ep_selected} ({get_watching_status(self.code)})', items=['Previous Episode', 'Next Episode', 'Replay', 'Search Anime', 'Exit'])
 		if opts == 0:  # Previous
 			self.previous_episode()
@@ -72,6 +112,7 @@ class AnimePlayer:
 		else:
 			self.show_actions_menu()
 
+	@pre_action
 	def previous_episode(self):
 		if self.ep_selected == 1:
 			input('No previous episode')
@@ -82,7 +123,13 @@ class AnimePlayer:
 			self.url = urljoin(f'https://{self.host}/', self.url)
 			js_code = get_source(self.url)
 			try:
-				self.anime_name, self.video_url = fetch(self.host, js_code)
+				response = fetch(self.host, js_code, self.debug)
+				if response == False:
+					raise ValueError(404)
+				if type(response) != bool:
+					if self.debug:
+						self.log_info(response, "Data returned from fetch():")
+				self.anime_name, self.video_url = response
 			except:
 				input(f'URL: {self.url}\n')
 				os._exit(404)
@@ -91,6 +138,7 @@ class AnimePlayer:
 			player(self.anime_name, self.video_url, self.hsize, self.wsize)
 			self.show_actions_menu()
 
+	@pre_action
 	def next_episode(self):
 		if self.ep_selected == self.total_ep:
 			input('No next episode')
@@ -101,7 +149,13 @@ class AnimePlayer:
 			self.url = urljoin(f'https://{self.host}/', self.url)
 			js_code = get_source(self.url)
 			try:
-				self.anime_name, self.video_url = fetch(self.host, js_code)
+				response = fetch(self.host, js_code, self.debug)
+				if response == False:
+					raise ValueError(404)
+				if type(response) != bool:
+					if self.debug:
+						self.log_info(response, "Data returned from fetch():")
+				self.anime_name, self.video_url = response
 			except:
 				input(f'URL: {self.url}\n')
 				os._exit(404)
@@ -120,11 +174,12 @@ def main():
 	else:
 		return check_connection
 
-	anime_player = AnimePlayer(host, hsize, wsize)
+	anime_player = AnimePlayer(host, hsize, wsize, debug=False)
 	in4 = last_viewed()
 	if in4:
 		print(f'''Last watched: {in4['Name']}\nEpisode: {in4['Watching']}\nTime: {in4['Time']}''')
 	anime_player.search_anime()
+	logging.shutdown()
 
 if __name__ == '__main__':
 	main()
