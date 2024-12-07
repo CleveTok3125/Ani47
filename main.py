@@ -55,7 +55,7 @@ class AnimePlayer:
 			self.show_actions_menu()
 
 	def show_actions_menu(self):
-		opts = menu(ask=f'{self.title}\nCurrent Episode: {self.ep_selected}', items=['Previous Episode', 'Next Episode', 'Replay', 'Search Anime', 'Exit'])
+		opts = menu(ask=f'{self.title}\nCurrent Episode: {self.ep_selected} ({get_watching_status(self.code)})', items=['Previous Episode', 'Next Episode', 'Replay', 'Search Anime', 'Exit'])
 		if opts == 0:  # Previous
 			self.previous_episode()
 		elif opts == 1:  # Next

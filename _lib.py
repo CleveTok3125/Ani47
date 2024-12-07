@@ -103,11 +103,19 @@ def eps(host, path):
 		return False
 	url = urljoin(base, ep1)
 	sauce = get_source(url)
+	li_items = re.findall(r'<li><a.*?<\/a><\/li>', sauce, re.DOTALL)
 	pattern = r'''<a[^>]*\s+href="([^"]+)"[^>]*(?=\s+class="[^"]*(?:active\s+)?btn-episode[^"]*")[^>]*>(.*?)<\/a>'''
 	episodes = {}
-	matches = re.findall(pattern, sauce)
-	for href, episode in matches:
-		episodes[episode] = urljoin(base, href)
+	matches = {}
+	for li in li_items:
+		match = re.findall(pattern, li)
+		if match:
+			if len(match) != 0:
+				match = match[0]
+				matches[match[0]] = match[1]
+	for href, episode in matches.items():
+		ep_id = href.split('/')[-1].split('.')[0]
+		episodes[f'{episode} - {ep_id}'] = urljoin(base, href)
 	return episodes
 
 def clscr():
