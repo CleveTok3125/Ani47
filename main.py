@@ -21,7 +21,9 @@ class AnimePlayer:
 		self.code = ''
 		self.anime_name = ''
 		self.video_url = ''
+		self.track_lst = False
 		self.url = ''
+		self.js_code = ''
 
 	def log_info(self, custom_message="", custom_title=""):
 		logging.basicConfig(filename='anime_player.log', level=logging.DEBUG, format='%(asctime)s - %(message)s')
@@ -37,10 +39,26 @@ class AnimePlayer:
 		logging.debug("Code: %s", self.code)
 		logging.debug("Anime Name: %s", self.anime_name)
 		logging.debug("Video URL: %s", self.video_url)
+		logging.debug("Tracks list: %s", self.track_lst)
 		logging.debug("URL: %s", self.url)
+		#logging.debug("JS Code: %s", self.js_code)
 
 		if custom_message:
 			logging.debug(f"{custom_title}\n### BEGIN CODE ###\n{custom_message}\n### END CODE ###")
+
+	@pre_action
+	def get_info(self):
+		try:
+			response = fetch(self.host, self.js_code, self.debug)
+			if response == False:
+				raise ValueError(404)
+			if type(response) != bool:
+				if self.debug:
+					self.log_info(response, "Data returned from fetch():")
+			self.anime_name, self.video_url, self.track_lst = response
+		except Exception as e:
+			input(f'URL: {self.url}\n{e}\n')
+			os._exit(404)
 
 	@pre_action
 	def search_anime(self):
@@ -65,18 +83,8 @@ class AnimePlayer:
 				clscr()
 				self.search_anime()
 			self.url = urljoin(f'https://{self.host}/', self.url)
-			js_code = get_source(self.url)
-			try:
-				response = fetch(self.host, js_code, self.debug)
-				if response == False:
-					raise ValueError(404)
-				if type(response) != bool:
-					if self.debug:
-						self.log_info(response, "Data returned from fetch():")
-				self.anime_name, self.video_url = response
-			except:
-				input(f'URL: {self.url}\n')
-				os._exit(404)
+			self.js_code = get_source(self.url)
+			self.get_info()
 			clscr()
 			print('''Video player gesture instructions:
 - Play/Pause: double click (S)
@@ -86,7 +94,7 @@ class AnimePlayer:
 - Forward 85s (skip OP/EN): click top side (W)
 - Move window: drag down side''')
 			handle_anime_history(self.title, self.ep_list, self.ep_selected, self.code)
-			player(self.anime_name, self.video_url, self.hsize, self.wsize)
+			player(self.anime_name, self.video_url, self.track_lst, self.hsize, self.wsize)
 			self.show_actions_menu()
 		if self.debug:
 			self.log_info()
@@ -103,7 +111,7 @@ class AnimePlayer:
 		elif opts == 2:  # Replay
 			clscr()
 			handle_anime_history(self.title, self.ep_list, self.ep_selected, self.code)
-			player(self.anime_name, self.video_url, self.hsize, self.wsize)
+			player(self.anime_name, self.video_url, self.track_lst, self.hsize, self.wsize)
 			self.show_actions_menu()
 		elif opts == 3:  # Search
 			self.search_anime()
@@ -121,21 +129,11 @@ class AnimePlayer:
 			self.ep_selected -= 1
 			self.url, self.ep_selected, self.total_ep = menudict(ask=None, items=self.ep_list, presel=self.ep_selected)
 			self.url = urljoin(f'https://{self.host}/', self.url)
-			js_code = get_source(self.url)
-			try:
-				response = fetch(self.host, js_code, self.debug)
-				if response == False:
-					raise ValueError(404)
-				if type(response) != bool:
-					if self.debug:
-						self.log_info(response, "Data returned from fetch():")
-				self.anime_name, self.video_url = response
-			except:
-				input(f'URL: {self.url}\n')
-				os._exit(404)
+			self.js_code = get_source(self.url)
+			self.get_info()
 			clscr()
 			handle_anime_history(self.title, self.ep_list, self.ep_selected, self.code)
-			player(self.anime_name, self.video_url, self.hsize, self.wsize)
+			player(self.anime_name, self.video_url, self.track_lst, self.hsize, self.wsize)
 			self.show_actions_menu()
 
 	@pre_action
@@ -147,21 +145,11 @@ class AnimePlayer:
 			self.ep_selected += 1
 			self.url, self.ep_selected, self.total_ep = menudict(ask=None, items=self.ep_list, presel=self.ep_selected)
 			self.url = urljoin(f'https://{self.host}/', self.url)
-			js_code = get_source(self.url)
-			try:
-				response = fetch(self.host, js_code, self.debug)
-				if response == False:
-					raise ValueError(404)
-				if type(response) != bool:
-					if self.debug:
-						self.log_info(response, "Data returned from fetch():")
-				self.anime_name, self.video_url = response
-			except:
-				input(f'URL: {self.url}\n')
-				os._exit(404)
+			self.js_code = get_source(self.url)
+			self.get_info()
 			clscr()
 			handle_anime_history(self.title, self.ep_list, self.ep_selected, self.code)
-			player(self.anime_name, self.video_url, self.hsize, self.wsize)
+			player(self.anime_name, self.video_url, self.track_lst, self.hsize, self.wsize)
 			self.show_actions_menu()
 
 def main():
