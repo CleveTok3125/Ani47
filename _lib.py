@@ -1,6 +1,6 @@
 from urllib.parse import urljoin, urlparse
 from datetime import datetime
-import requests, re, ast, os, sys, json, shutil
+import requests, re, ast, os, sys, json, copy
 
 try:
 	import webview
@@ -61,6 +61,9 @@ def fetch(host, js_code, debug):
 
 def player(anime_name, video_url, track_lst, hsize, wsize):
 	print(f'Playing {anime_name}...')
+	
+	# Work with copies to avoid changing the original
+	track_lst_copy = copy.deepcopy(track_lst)
 
 	html_file = os.path.normpath('./player.html')
 	temp_html = os.path.normpath('./temp.player.html')
@@ -81,12 +84,12 @@ def player(anime_name, video_url, track_lst, hsize, wsize):
 		html_content = file.read()
 	html_content = html_content.replace("{{video_url}}", video_url)
 
-	if track_lst == False:
+	if track_lst_copy == False:
 		html_content = html_content.replace("{{track_lst}}", 'false')
 	else:
 
 		# Download subtitles to avoid CORS
-		for track in track_lst:
+		for track in track_lst_copy:
 			url = track['file']
 			name = url.split('/')[-1]
 			subtitles_file = os.path.join(os.getcwd(), subtitles_path, name)
@@ -97,8 +100,8 @@ def player(anime_name, video_url, track_lst, hsize, wsize):
 			delete_subtitles.append(subtitles_file)
 			track['file'] = os.path.join('./', subtitles_path, name).replace('\\', '/')
 
-		track_lst = json.dumps(track_lst)
-		html_content = html_content.replace("{{track_lst}}", track_lst)
+		track_lst_copy = json.dumps(track_lst_copy)
+		html_content = html_content.replace("{{track_lst}}", track_lst_copy)
 
 	if not wv_supported:
 		html_content = html_content.replace('controlsList="nofullscreen"', '')
