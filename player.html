@@ -39,16 +39,16 @@
 
 			if (tracks) {
 				tracks.forEach(function(track) {
-			        var trackElement = document.createElement('track');
-			        trackElement.kind = track.kind;
-			        trackElement.label = track.label;
-			        trackElement.srclang = track.file.split('.').slice(-2, -1)[0];
-			        trackElement.src = track.file;
-			        if (track.default) {
-			            trackElement.default = true;
-			        }
-			        video.appendChild(trackElement);
-			    });
+					var trackElement = document.createElement('track');
+					trackElement.kind = track.kind;
+					trackElement.label = track.label;
+					trackElement.srclang = track.file.split('.').slice(-2, -1)[0];
+					trackElement.src = track.file;
+					if (track.default) {
+						trackElement.default = true;
+					}
+					video.appendChild(trackElement);
+				});
 			}
 
 			hls.on(Hls.Events.MANIFEST_PARSED, function() {
@@ -160,5 +160,39 @@
 			console.error("HLS.js not supported in this browser.");
 		}
 	</script>
+
+	<style>
+	video::cue {
+		background: transparent;
+		color: white;
+		font-size: 0.9em;
+		font-family: Arial, sans-serif;
+		text-shadow: 
+			-1px -1px 0px #000,
+			 0px -1px 0px #000,
+			 1px -1px 0px #000,
+			-1px  0px 0px #000,
+			 1px  0px 0px #000,
+			-1px  1px 0px #000,
+			 0px  1px 0px #000,
+			 1px  1px 0px #000,
+			-2px -2px 0px #000,
+			-1px -2px 0px #000,
+			 0px -2px 0px #000,
+			 1px -2px 0px #000,
+			 2px -2px 0px #000,
+			 2px -1px 0px #000,
+			 2px  0px 0px #000,
+			 2px  1px 0px #000,
+			 2px  2px 0px #000,
+			 1px  2px 0px #000,
+			 0px  2px 0px #000,
+			-1px  2px 0px #000,
+			-2px  2px 0px #000,
+			-2px  1px 0px #000,
+			-2px  0px 0px #000,
+			-2px -1px 0px #000;
+	}
+	</style>
 </body>
 </html>
