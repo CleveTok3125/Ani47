@@ -1,6 +1,6 @@
 from urllib.parse import urljoin, urlparse
 from datetime import datetime
-import requests, re, ast, os, sys, json
+import requests, re, ast, os, sys, json, shutil
 
 try:
 	import webview
@@ -29,38 +29,77 @@ def fetch(host, js_code, debug):
 	}
 
 	response = requests.post(f'https://{host}/player/player.php', data=data)
+	if response.status_code == 200:	
+		response_text = response.content.decode('utf-8')
+		
+		sources = re.search(r'"sources":\s*(\[[^\]]*\])', response_text)
+		tracks = re.search(r'tracks:\s*(\[[^\]]*\])', response_text)
 
-	if response.status_code == 200:
-		match = re.search(r'https?://.*?\.m3u8', response.text)
-		if match:
-			video_url = match.group(0)
-			return (anime_name, video_url)
+		if tracks != None:
+			tracks = tracks.group(1)
+			tracks = re.sub(r"([a-zA-Z0-9_]+):", r'"\1":', tracks)
+			tracks = json.loads(tracks)
+			if len(tracks) != 0:
+				for track in tracks:
+					track['file'] = urljoin(f'https://{host}', track['file'])
+				# [{'file': 'https://{host}/subtitle/en.vtt', 'label': 'English', 'kind': 'subtitles', 'default': False}, {'file': 'https://{host}/subtitles/vi.vtt', 'label': 'Tiếng Việt', 'kind': 'subtitles', 'default': True}]
+
+		sources = json.loads(sources.group(1))
+		sources = sources[0]
+
+		if sources['type'] == 'hls':
+			video_url = sources['file']
+			return (anime_name, video_url, tracks if (tracks != None or len(tracks) != 0) else False)
 		else:
 			print("Video format not supported.")
 			if debug:
-				return response.text
+				return response_text
 			return False
 	else:
 		print("Request failed:", response.status_code)
 		return False
 
-def player(anime_name, video_url, hsize, wsize):
+def player(anime_name, video_url, track_lst, hsize, wsize):
 	print(f'Playing {anime_name}...')
 
 	html_file = os.path.normpath('./player.html')
 	temp_html = os.path.normpath('./temp.player.html')
+	subtitles_path = os.path.normpath('./subtitles/')
+	delete_subtitles = []
 
 	if os.path.exists(temp_html):
 		def force_remove(temp_html):
 			try:
 				os.remove(temp_html)
-			except:
-				input(f'Please close all {os.path.join(os.getcwd(), temp_html)} related tasks.\n')
+			except OSError as e:
+				input(f'Please close all {os.path.join(os.getcwd(), temp_html)} related tasks.\n{e}\n')
 				force_remove(temp_html)
+	if not os.path.exists(subtitles_path):
+		os.mkdir(subtitles_path)
 
 	with open(html_file, 'r', encoding='utf-8') as file:
 		html_content = file.read()
 	html_content = html_content.replace("{{video_url}}", video_url)
+
+	if track_lst == False:
+		html_content = html_content.replace("{{track_lst}}", 'false')
+	else:
+
+		# Download subtitles to avoid CORS
+		for track in track_lst:
+			url = track['file']
+			name = url.split('/')[-1]
+			subtitles_file = os.path.join(os.getcwd(), subtitles_path, name)
+			response = requests.get(url)
+			subtitles = response.content.decode('utf-8')
+			with open(subtitles_file, 'w', encoding='utf-8') as f:
+				f.write(subtitles)
+			delete_subtitles.append(subtitles_file)
+			track['file'] = os.path.join('./', subtitles_path, name).replace('\\', '/')
+
+		track_lst = json.dumps(track_lst)
+		html_content = html_content.replace("{{track_lst}}", track_lst)
+
 	if not wv_supported:
 		html_content = html_content.replace('controlsList="nofullscreen"', '')
 		html_content = html_content.replace('var isFeatureEnabled = true', 'var isFeatureEnabled = false')
@@ -72,9 +111,13 @@ def player(anime_name, video_url, hsize, wsize):
 		window = webview.create_window(anime_name, temp_html, width=wsize, height=hsize, resizable=True, easy_drag=True)
 		webview.start()
 	else:
-		print(f'''Pywebview is not supported. Access player via "{os.path.join(os.getcwd(), temp_html)}"''')
+		print(f'''Pywebview is not supported.\n$ python -m http.server --directory "{os.getcwd()}"\nAccess player via "{urljoin('http://127.0.0.1:8000/', temp_html)}"''')
 		input('Press Enter to end session\n')
+	
 	os.remove(temp_html)
+	for file in delete_subtitles:
+		if os.path.exists(file):
+			os.remove(file)
 
 def search(host, query):
 	def search_by_query(query, movie_dict):
