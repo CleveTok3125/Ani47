@@ -26,25 +26,26 @@ class AnimePlayer:
 		self.js_code = ''
 
 	def log_info(self, custom_message="", custom_title=""):
-		logging.basicConfig(filename='anime_player.log', level=logging.DEBUG, format='%(asctime)s - %(message)s')
-		logging.debug("\n" + "="*50)
-		logging.debug("Host: %s", self.host)
-		logging.debug("Hsize: %s", self.hsize)
-		logging.debug("Wsize: %s", self.wsize)
-		logging.debug("Debug: %s", self.debug)
-		logging.debug("Ep Selected: %d", self.ep_selected)
-		logging.debug("Total Ep: %d", self.total_ep)
-		logging.debug("Title: %s", self.title)
-		logging.debug("Ep List: %s", self.ep_list)
-		logging.debug("Code: %s", self.code)
-		logging.debug("Anime Name: %s", self.anime_name)
-		logging.debug("Video URL: %s", self.video_url)
-		logging.debug("Tracks list: %s", self.track_lst)
-		logging.debug("URL: %s", self.url)
-		#logging.debug("JS Code: %s", self.js_code)
+		if self.debug:
+			logging.basicConfig(filename='anime_player.log', level=logging.DEBUG, format='%(asctime)s - %(message)s')
+			logging.debug("\n" + "="*50)
+			logging.debug("Host: %s", self.host)
+			logging.debug("Hsize: %s", self.hsize)
+			logging.debug("Wsize: %s", self.wsize)
+			logging.debug("Debug: %s", self.debug)
+			logging.debug("Ep Selected: %d", self.ep_selected)
+			logging.debug("Total Ep: %d", self.total_ep)
+			logging.debug("Title: %s", self.title)
+			logging.debug("Ep List: %s", self.ep_list)
+			logging.debug("Code: %s", self.code)
+			logging.debug("Anime Name: %s", self.anime_name)
+			logging.debug("Video URL: %s", self.video_url)
+			logging.debug("Tracks list: %s", self.track_lst)
+			logging.debug("URL: %s", self.url)
+			#logging.debug("JS Code: %s", self.js_code)
 
-		if custom_message:
-			logging.debug(f"{custom_title}\n### BEGIN CODE ###\n{custom_message}\n### END CODE ###")
+			if custom_message:
+				logging.debug(f"{custom_title}\n### BEGIN CODE ###\n{custom_message}\n### END CODE ###")
 
 	@pre_action
 	def get_info(self):
