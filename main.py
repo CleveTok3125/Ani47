@@ -104,11 +104,11 @@ class AnimePlayer:
 	def show_actions_menu(self):
 		if self.debug:
 			self.log_info()
-		opts = menu(ask=f'{self.title}\nCurrent Episode: {self.ep_selected} ({get_watching_status(self.code)})', items=['Previous Episode', 'Next Episode', 'Replay', 'Search Anime', 'Exit'])
-		if opts == 0:  # Previous
-			self.previous_episode()
-		elif opts == 1:  # Next
+		opts = menu(ask=f'{self.title}\nCurrent Episode: {self.ep_selected} ({get_watching_status(self.code)})', items=['Next Episode', 'Previous Episode', 'Replay', 'Search Anime', 'Exit'])
+		if opts == 0:  # Next
 			self.next_episode()
+		elif opts == 1:  # Previous
+			self.previous_episode()
 		elif opts == 2:  # Replay
 			clscr()
 			handle_anime_history(self.title, self.ep_list, self.ep_selected, self.code)
