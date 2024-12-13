@@ -65,8 +65,8 @@ def player(anime_name, video_url, track_lst, hsize, wsize):
 	# Work with copies to avoid changing the original
 	track_lst_copy = copy.deepcopy(track_lst)
 
-	html_file = os.path.normpath('./player.html')
-	temp_html = os.path.normpath('./temp.player.html')
+	html_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'player.html') # main, lib and player must be in the same directory
+	temp_html = os.path.normpath('./index.html')
 	subtitles_path = os.path.normpath('./subtitles/')
 	delete_subtitles = []
 
@@ -82,6 +82,7 @@ def player(anime_name, video_url, track_lst, hsize, wsize):
 
 	with open(html_file, 'r', encoding='utf-8') as file:
 		html_content = file.read()
+
 	html_content = html_content.replace("{{video_url}}", video_url)
 
 	if track_lst_copy == False:
@@ -114,8 +115,14 @@ def player(anime_name, video_url, track_lst, hsize, wsize):
 		window = webview.create_window(anime_name, temp_html, width=wsize, height=hsize, resizable=True, easy_drag=True)
 		webview.start()
 	else:
-		print(f'''Pywebview is not supported.\n$ python -m http.server --directory "{os.getcwd()}"\nAccess player via "{urljoin('http://127.0.0.1:8000/', temp_html)}"''')
-		input('Press Enter to end session\n')
+		from server import start_server
+		PORT = 8000
+		print(f'''Pywebview is not supported.\nAccess player via "{urljoin(f'http://127.0.0.1:{PORT}/', temp_html)}"''')
+		print('Local server is running... (CTRL-C to stop)')
+		try:
+			start_server(PORT)
+		except KeyboardInterrupt:
+			pass
 	
 	os.remove(temp_html)
 	for file in delete_subtitles:
