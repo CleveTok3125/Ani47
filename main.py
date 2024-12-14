@@ -1,6 +1,7 @@
 from _lib import *
 from urllib.parse import urljoin
 import time, os, logging
+from config import Config
 
 def pre_action(func):
 	def wrapper(self, *args, **kwargs):
@@ -50,12 +51,11 @@ class AnimePlayer:
 	@pre_action
 	def get_info(self):
 		try:
-			response = fetch(self.host, self.js_code, self.debug)
+			response = fetch(self.host, self.js_code)
 			if response == False:
 				raise ValueError(404)
 			if type(response) != bool:
-				if self.debug:
-					self.log_info(response, "Data returned from fetch():")
+				self.log_info(response, "Data returned from fetch():")
 			self.anime_name, self.video_url, self.track_lst = response
 		except Exception as e:
 			input(f'URL: {self.url}\n{e}\n')
@@ -64,8 +64,7 @@ class AnimePlayer:
 	@pre_action
 	def search_anime(self):
 		query = str(input('Search Anime: '))
-		if self.debug:
-			self.log_info()
+		self.log_info()
 		result = search(self.host, query)
 		if result != False:
 			if len(result) == 1:
@@ -97,13 +96,11 @@ class AnimePlayer:
 			handle_anime_history(self.title, self.ep_list, self.ep_selected, self.code)
 			player(self.anime_name, self.video_url, self.track_lst, self.hsize, self.wsize)
 			self.show_actions_menu()
-		if self.debug:
-			self.log_info()
+		self.log_info()
 
 	@pre_action
 	def show_actions_menu(self):
-		if self.debug:
-			self.log_info()
+		self.log_info()
 		opts = menu(ask=f'{self.title}\nCurrent Episode: {self.ep_selected} ({get_watching_status(self.code)})', items=['Next Episode', 'Previous Episode', 'Replay', 'Search Anime', 'Exit'])
 		if opts == 0:  # Next
 			self.next_episode()
@@ -154,8 +151,11 @@ class AnimePlayer:
 			self.show_actions_menu()
 
 def main():
-	host = 'anime47.cam'
-	hsize, wsize = (545, 900)
+	config = Config()
+	host = config.get('HOST')
+	hsize = config.get_int('HSIZE')
+	wsize = config.get_int('WSIZE')
+	debug = config.get_bool('DEBUG')
 
 	if check_connection(f'https://{host}/'):
 		time.sleep(0.5)
@@ -163,7 +163,7 @@ def main():
 	else:
 		return check_connection
 
-	anime_player = AnimePlayer(host, hsize, wsize, debug=False)
+	anime_player = AnimePlayer(host, hsize, wsize, debug=debug)
 	in4 = last_viewed()
 	if in4:
 		print(f'''Last watched: {in4['Name']}\nEpisode: {in4['Watching']}\nTime: {in4['Time']}''')
