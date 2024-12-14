@@ -40,6 +40,7 @@ def fetch(host, js_code):
 		sources = re.search(r'"sources":\s*(\[[^\]]*\])', response_text)
 		tracks = re.search(r'tracks:\s*(\[[^\]]*\])', response_text)
 
+		return_tracks = False
 		if tracks != None:
 			tracks = tracks.group(1)
 			tracks = re.sub(r"([a-zA-Z0-9_]+):", r'"\1":', tracks)
@@ -48,13 +49,14 @@ def fetch(host, js_code):
 				for track in tracks:
 					track['file'] = urljoin(f'https://{host}', track['file'])
 				# [{'file': 'https://{host}/subtitle/en.vtt', 'label': 'English', 'kind': 'subtitles', 'default': False}, {'file': 'https://{host}/subtitles/vi.vtt', 'label': 'Tiếng Việt', 'kind': 'subtitles', 'default': True}]
+				return_tracks = True
 
 		sources = json.loads(sources.group(1))
 		sources = sources[0]
 
 		if sources['type'] == 'hls':
 			video_url = sources['file']
-			return (anime_name, video_url, tracks if (tracks != None or len(tracks) != 0) else False)
+			return (anime_name, video_url, tracks if return_tracks else False)
 		else:
 			print("Video format not supported.")
 			if debug:
