@@ -1,18 +1,23 @@
 from urllib.parse import urljoin, urlparse
 from datetime import datetime
 import requests, re, ast, os, sys, json, copy
+from config import Config
+
+_config = Config()
 
 try:
-	import webview
-	wv_supported = True
-except:
+	wv_supported = _config.get_bool('PYWEBVIEW')
+	if wv_supported:
+		import webview
+except ModuleNotFoundError:
 	wv_supported = False
 
 def get_source(url):
 	r = requests.get(url)
 	return r.content.decode('utf-8')
 
-def fetch(host, js_code, debug):
+def fetch(host, js_code):
+	debug = _config.get_bool('DEBUG')
 	anime_name = None
 	match = re.search(r'<title>(.*?)</title>', js_code)
 	if match:
@@ -104,7 +109,7 @@ def player(anime_name, video_url, track_lst, hsize, wsize):
 		track_lst_copy = json.dumps(track_lst_copy)
 		html_content = html_content.replace("{{track_lst}}", track_lst_copy)
 
-	if not wv_supported:
+	if (not wv_supported) and (not _config.get_bool('FORCE_GESTURE')):
 		html_content = html_content.replace('controlsList="nofullscreen"', '')
 		html_content = html_content.replace('var isFeatureEnabled = true', 'var isFeatureEnabled = false')
 		
@@ -116,7 +121,7 @@ def player(anime_name, video_url, track_lst, hsize, wsize):
 		webview.start()
 	else:
 		from server import start_server
-		PORT = 8000
+		PORT = _config.get_int('PORT')
 		print(f'''Pywebview is not supported.\nAccess player via "{urljoin(f'http://127.0.0.1:{PORT}/', temp_html)}"''')
 		print('Local server is running... (CTRL-C to stop)')
 		try:
@@ -240,6 +245,9 @@ def check_connection(url):
 	return False
 
 def handle_anime_history(anime_name, ep_list, ep_selected, code, filename=os.path.normpath("./history.json")):
+	if not _config.get_bool('HISTORY'):
+		return 'History is disabled'
+
 	ep_list = list(ep_list.keys())
 	watching = ep_list[ep_selected - 1]
 	
@@ -284,6 +292,6 @@ def last_viewed(filename=os.path.normpath("./history.json")):
 		with open(filename, "r", encoding="utf-8") as file:
 			anime_data = json.load(file)
 		max_index = max(anime_data.values(), key=lambda x: datetime.strptime(x["Time"], "%Y-%m-%d %H:%M:%S"))
-	except:
+	except FileNotFoundError:
 		return None
 	return max_index
