@@ -123,7 +123,13 @@ def player(anime_name, video_url, track_lst, hsize, wsize):
 		webview.start()
 	else:
 		from server import start_server
-		PORT = _config.get_int('PORT')
+		PORT = _config.get('PORT')
+		match = re.match(r"randint\(\s*(\d+)\s*,\s*(\d+)\s*\)", PORT)
+		if match:
+			from random import randint
+			PORT = randint(int(match.group(1)), int(match.group(2)))
+		else:
+			PORT = int(PORT)
 		share = _config.get_bool('LOCAL_SHARE')
 		print(f'''Pywebview is not supported.\nAccess player via "{urljoin(f'http://127.0.0.1:{PORT}/', temp_html)}"{" or IP address" if share else ""}''')
 		print('Local server is running... (CTRL-C to stop)')
