@@ -104,9 +104,8 @@ def player(anime_name, video_url, track_lst, hsize, wsize):
 			name = url.split('/')[-1]
 			subtitles_file = os.path.join(os.getcwd(), subtitles_path, name)
 			response = requests.get(url)
-			subtitles = response.content
 			with open(subtitles_file, 'wb') as f:
-				f.write(subtitles)
+				f.write(response.content)
 			delete_subtitles.append(subtitles_file)
 			track['file'] = os.path.join('./', subtitles_path, name).replace('\\', '/')
 
@@ -120,6 +119,7 @@ def player(anime_name, video_url, track_lst, hsize, wsize):
 	with open(temp_html, 'w', encoding='utf-8') as file:
 		file.write(html_content)
 
+	# START PLAYER #
 	PORT = _config.get('PORT')
 	match = re.match(r"randint\(\s*(\d+)\s*,\s*(\d+)\s*\)", PORT)
 	if match:
@@ -147,7 +147,8 @@ def player(anime_name, video_url, track_lst, hsize, wsize):
 			start_server(PORT=PORT, share=share)
 		except KeyboardInterrupt:
 			pass
-	
+	# END #
+
 	os.remove(temp_html)
 	for file in delete_subtitles:
 		if os.path.exists(file):
