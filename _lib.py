@@ -148,7 +148,7 @@ def player(anime_name, video_url, track_lst, hsize, wsize):
 
 		if is_free_port(PORT):
 			server_thread.start()
-		webview.start()
+		webview.start(debug=_config.get_bool('DEBUG'))
 	else:
 		print('Local server is running... (CTRL-C to stop)')
 		try:
