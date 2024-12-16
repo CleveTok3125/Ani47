@@ -104,8 +104,8 @@ def player(anime_name, video_url, track_lst, hsize, wsize):
 			name = url.split('/')[-1]
 			subtitles_file = os.path.join(os.getcwd(), subtitles_path, name)
 			response = requests.get(url)
-			subtitles = response.content.decode('utf-8')
-			with open(subtitles_file, 'w', encoding='utf-8') as f:
+			subtitles = response.content
+			with open(subtitles_file, 'wb') as f:
 				f.write(subtitles)
 			delete_subtitles.append(subtitles_file)
 			track['file'] = os.path.join('./', subtitles_path, name).replace('\\', '/')
@@ -132,14 +132,6 @@ def player(anime_name, video_url, track_lst, hsize, wsize):
 		print('Pywebview is not supported.')
 	local_url = urljoin(f'http://127.0.0.1:{PORT}/', temp_html)
 	print(f'''Access player via "{local_url}"{" or IP address" if share else ""}''')
-
-	if (track_lst != False) and (wv_supported):
-		if _config.get('SOFTSUB_DEFAULT') == 'ask':
-			if input('Soft subtitles may not be supported in pywebview. Disable pywebview? (Y/N) ') == 'Y':
-				wv_supported = False
-		else:
-			if _config.get_bool('SOFTSUB_DEFAULT'):
-				wv_supported = False
 
 	if wv_supported:
 		server_thread = threading.Thread(target=lambda: start_server(PORT=PORT, share=share))
