@@ -1,16 +1,10 @@
 from urllib.parse import urljoin, urlparse
 from datetime import datetime
-import requests, re, ast, os, sys, json, copy
+import requests, re, ast, os, sys, json, copy, threading
 from config import Config
+from server import start_server, is_free_port
 
 _config = Config()
-
-try:
-	wv_supported = _config.get_bool('PYWEBVIEW')
-	if wv_supported:
-		import webview
-except ModuleNotFoundError:
-	wv_supported = False
 
 def get_source(url):
 	r = requests.get(url)
@@ -67,12 +61,20 @@ def fetch(host, js_code):
 		return False
 
 def player(anime_name, video_url, track_lst, hsize, wsize):
+	wv_supported = _config.get_bool('PYWEBVIEW')
+	if wv_supported:
+		try:
+				import webview
+		except ModuleNotFoundError:
+			wv_supported = False
+
 	print(f'Playing {anime_name}...')
-	
+
 	# Work with copies to avoid changing the original
 	track_lst_copy = copy.deepcopy(track_lst)
 
-	html_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'player.html') # main, lib and player must be in the same directory
+	abs_path = os.path.dirname(os.path.abspath(__file__))
+	html_file = os.path.join(abs_path, './player.html') # main, lib and player must be in the same directory
 	temp_html = os.path.normpath('./index.html')
 	subtitles_path = os.path.normpath('./subtitles/')
 	delete_subtitles = []
@@ -118,20 +120,36 @@ def player(anime_name, video_url, track_lst, hsize, wsize):
 	with open(temp_html, 'w', encoding='utf-8') as file:
 		file.write(html_content)
 
+	PORT = _config.get('PORT')
+	match = re.match(r"randint\(\s*(\d+)\s*,\s*(\d+)\s*\)", PORT)
+	if match:
+		from random import randint
+		PORT = randint(int(match.group(1)), int(match.group(2)))
+	else:
+		PORT = int(PORT)
+	share = _config.get_bool('LOCAL_SHARE')
+	if not wv_supported:
+		print('Pywebview is not supported.')
+	local_url = urljoin(f'http://127.0.0.1:{PORT}/', temp_html)
+	print(f'''Access player via "{local_url}"{" or IP address" if share else ""}''')
+
+	if (track_lst != False) and (wv_supported):
+		if _config.get('SOFTSUB_DEFAULT') == 'ask':
+			if input('Soft subtitles may not be supported in pywebview. Disable pywebview? (Y/N) ') == 'Y':
+				wv_supported = False
+		else:
+			if _config.get_bool('SOFTSUB_DEFAULT'):
+				wv_supported = False
+
 	if wv_supported:
-		window = webview.create_window(anime_name, temp_html, width=wsize, height=hsize, resizable=True, easy_drag=True)
+		server_thread = threading.Thread(target=lambda: start_server(PORT=PORT, share=share))
+		server_thread.daemon = True
+		webview.create_window(anime_name, local_url, width=wsize, height=hsize, resizable=True, easy_drag=True)
+
+		if is_free_port(PORT):
+			server_thread.start()
 		webview.start()
 	else:
-		from server import start_server
-		PORT = _config.get('PORT')
-		match = re.match(r"randint\(\s*(\d+)\s*,\s*(\d+)\s*\)", PORT)
-		if match:
-			from random import randint
-			PORT = randint(int(match.group(1)), int(match.group(2)))
-		else:
-			PORT = int(PORT)
-		share = _config.get_bool('LOCAL_SHARE')
-		print(f'''Pywebview is not supported.\nAccess player via "{urljoin(f'http://127.0.0.1:{PORT}/', temp_html)}"{" or IP address" if share else ""}''')
 		print('Local server is running... (CTRL-C to stop)')
 		try:
 			start_server(PORT=PORT, share=share)
