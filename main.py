@@ -64,12 +64,21 @@ class AnimePlayer:
 			os._exit(404)
 
 	@pre_action
-	def search_anime(self):
+	def args_search(self):
 		if len(sys.argv) > 1 and self.is_args:
-			query = sys.argv[1]
 			self.is_args = False
-		else:
-			query = str(input('Search Anime: '))
+			query = sys.argv[1]
+			if query == '!last':
+				last = last_viewed()
+				if last:
+					last = last['Name']
+					return last.split('-')[0].strip()
+			return query
+		return str(input('Search Anime: '))
+
+	@pre_action
+	def search_anime(self):
+		query = self.args_search()
 		self.log_info()
 		result = search(self.host, query)
 		if result != False:
