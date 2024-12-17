@@ -133,10 +133,9 @@ def player(anime_name, video_url, track_lst, hsize, wsize):
 	share = _config.get_bool('LOCAL_SHARE')
 	if not wv_supported:
 		print('Pywebview is not supported.')
-	local_url = urljoin(f'http://127.0.0.1:{PORT}/', temp_html)
-	print(f'''Access player via "{local_url}"{" or IP address" if share else ""}''')
 
 	if wv_supported:
+		local_url = urljoin(f'http://127.0.0.1:{PORT}/', temp_html)
 		server_thread = threading.Thread(target=lambda: start_server(PORT=PORT, share=share))
 		server_thread.daemon = True
 		webview.create_window(anime_name, local_url, width=wsize, height=hsize, resizable=True, easy_drag=True)
