@@ -1,6 +1,6 @@
 from _lib import *
 from urllib.parse import urljoin
-import time, os, logging
+import time, os, logging, sys
 from config import Config
 
 def pre_action(func):
@@ -25,6 +25,7 @@ class AnimePlayer:
 		self.track_lst = False
 		self.url = ''
 		self.js_code = ''
+		self.is_args = True
 
 	def log_info(self, custom_message="", custom_title=""):
 		if self.debug:
@@ -44,6 +45,7 @@ class AnimePlayer:
 			logging.debug("Tracks list: %s", self.track_lst)
 			logging.debug("URL: %s", self.url)
 			#logging.debug("JS Code: %s", self.js_code)
+			logging.debug("Using arguments: %s", self.is_args)
 
 			if custom_message:
 				logging.debug(f"{custom_title}\n### BEGIN CODE ###\n{custom_message}\n### END CODE ###")
@@ -63,7 +65,11 @@ class AnimePlayer:
 
 	@pre_action
 	def search_anime(self):
-		query = str(input('Search Anime: '))
+		if len(sys.argv) > 1 and self.is_args:
+			query = sys.argv[1]
+			self.is_args = False
+		else:
+			query = str(input('Search Anime: '))
 		self.log_info()
 		result = search(self.host, query)
 		if result != False:
