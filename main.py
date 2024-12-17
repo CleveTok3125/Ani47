@@ -65,16 +65,22 @@ class AnimePlayer:
 
 	@pre_action
 	def args_search(self):
+		def get_name(last):
+			last = last_viewed()
+			if last:
+				last = last['Name']
+				return last.split('-')[0].strip()
+
 		if len(sys.argv) > 1 and self.is_args:
 			self.is_args = False
 			query = sys.argv[1]
 			if query == '!last':
-				last = last_viewed()
-				if last:
-					last = last['Name']
-					return last.split('-')[0].strip()
+				return get_name(query)
 			return query
-		return str(input('Search Anime: '))
+		query = str(input('Search Anime: '))
+		if query == '!last':
+			return get_name(query)
+		return query
 
 	@pre_action
 	def search_anime(self):
@@ -185,6 +191,7 @@ def main():
 	in4 = last_viewed()
 	if in4:
 		print(f'''Last watched: {in4['Name']}\nEpisode: {in4['Watching']}\nTime: {in4['Time']}''')
+		print('Tip: use "!last" to quickly find the most recently watched anime.')
 	anime_player.search_anime()
 	logging.shutdown()
 
