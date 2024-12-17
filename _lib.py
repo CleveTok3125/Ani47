@@ -2,13 +2,16 @@ from urllib.parse import urljoin, urlparse
 from datetime import datetime
 import requests, re, ast, os, sys, json, copy, threading
 from config import Config
-from server import start_server, is_free_port
+from server import *
 
 _config = Config()
 
 def get_source(url):
 	r = requests.get(url)
-	return r.content.decode('utf-8')
+	try:
+		return r.content.decode('utf-8')
+	except UnicodeDecodeError:
+		return r.text
 
 def fetch(host, js_code):
 	debug = _config.get_bool('DEBUG')
@@ -138,8 +141,7 @@ def player(anime_name, video_url, track_lst, hsize, wsize):
 		server_thread.daemon = True
 		webview.create_window(anime_name, local_url, width=wsize, height=hsize, resizable=True, easy_drag=True)
 
-		if is_free_port(PORT):
-			server_thread.start()
+		server_thread.start()
 		webview.start(debug=_config.get_bool('DEBUG'))
 	else:
 		print('Local server is running... (CTRL-C to stop)')
