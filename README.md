@@ -24,3 +24,7 @@ $ python main.py !last
 ```bash
 $ python main.py '!last'
 ```
+## Query commands
+- `!last`: View last watched anime
+- `!ask`: Enter raw search mode (treat query commands such as `!ask` and `!last` as search content)
+- `!history`: Show viewing history
