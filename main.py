@@ -70,17 +70,34 @@ class AnimePlayer:
 			if last:
 				last = last['Name']
 				return last.split('-')[0].strip()
+		
+		def ask(*args, **kwargs):
+			return str(input('!Search Anime: '))
+		
+		def history(*args, **kwargs):
+			data = json.dumps(read_history(), indent=4, ensure_ascii=False)
+			print(data)
+			self.search_anime()
+		
+		def ans(query):
+			result = search_def.get(query, query)
+			if callable(result):
+				return result(query)
+			else:
+				return result
+		
+		search_def = {
+			'!last': get_name,
+			'!ask': ask,
+			'!history': history
+		}
 
 		if len(sys.argv) > 1 and self.is_args:
 			self.is_args = False
 			query = sys.argv[1]
-			if query == '!last':
-				return get_name(query)
-			return query
+			return ans(query)
 		query = str(input('Search Anime: '))
-		if query == '!last':
-			return get_name(query)
-		return query
+		return ans(query)
 
 	@pre_action
 	def search_anime(self):

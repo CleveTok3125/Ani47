@@ -297,22 +297,25 @@ def handle_anime_history(anime_name, ep_list, ep_selected, code, filename=os.pat
 	with open(filename, "w", encoding="utf-8") as file:
 		json.dump(anime_dict, file, ensure_ascii=False, indent=4)
 
-def get_watching_status(code, filename=os.path.normpath("./history.json")):
+def get_watching_status(code):
+	anime_dict = read_history()
+	if anime_dict != None:
+		for anime in anime_dict.values():
+			if anime["Code"] == code:
+				return anime["Watching"]
+	return None
+
+def last_viewed():
+	anime_data = read_history()
+	if anime_data != None:
+		max_index = max(anime_data.values(), key=lambda x: datetime.strptime(x["Time"], "%Y-%m-%d %H:%M:%S"))
+		return max_index
+	return None
+
+def read_history(filename=os.path.normpath("./history.json")):
 	try:
 		with open(filename, "r", encoding="utf-8") as file:
 			anime_dict = json.load(file)
+		return anime_dict
 	except FileNotFoundError:
 		return None
-	for anime in anime_dict.values():
-		if anime["Code"] == code:
-			return anime["Watching"]
-	return None
-
-def last_viewed(filename=os.path.normpath("./history.json")):
-	try:
-		with open(filename, "r", encoding="utf-8") as file:
-			anime_data = json.load(file)
-		max_index = max(anime_data.values(), key=lambda x: datetime.strptime(x["Time"], "%Y-%m-%d %H:%M:%S"))
-	except FileNotFoundError:
-		return None
-	return max_index
