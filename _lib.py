@@ -1,8 +1,10 @@
 from urllib.parse import urljoin, urlparse
 from datetime import datetime
-import requests, re, ast, os, sys, json, copy, threading
+from copy import deepcopy
+import requests, re, ast, os, sys, json, threading
 from config import Config
 from server import *
+from vtt_tools import *
 
 _config = Config()
 
@@ -74,7 +76,7 @@ def player(anime_name, video_url, track_lst, hsize, wsize):
 	print(f'Playing {anime_name}...')
 
 	# Work with copies to avoid changing the original
-	track_lst_copy = copy.deepcopy(track_lst)
+	track_lst_copy = deepcopy(track_lst)
 
 	abs_path = os.path.dirname(os.path.abspath(__file__))
 	html_file = os.path.join(abs_path, './player.html') # main, lib and player must be in the same directory
@@ -114,6 +116,12 @@ def player(anime_name, video_url, track_lst, hsize, wsize):
 
 		track_lst_copy = json.dumps(track_lst_copy)
 		html_content = html_content.replace("{{track_lst}}", track_lst_copy)
+
+		if _config.get_bool('ADFILTER'):
+			for file in delete_subtitles:
+				bak_file = backupfile(file)
+				if adfilter(bak_file):
+					applybackup(bak_file)
 
 	if (not wv_supported) and (not _config.get_bool('FORCE_GESTURE')):
 		html_content = html_content.replace('controlsList="nofullscreen"', '')
