@@ -1,7 +1,7 @@
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urljoin
 from datetime import datetime
 from copy import deepcopy
-import requests, re, ast, os, sys, json, threading
+import requests, re, os, sys, json, threading
 from config import Config
 from server import *
 from vtt_tools import *
