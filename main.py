@@ -1,5 +1,6 @@
 from urllib.parse import urljoin
-import time, os, logging, sys
+from time import sleep
+import os, logging, sys
 
 from _lib import *
 from config import Config
@@ -67,7 +68,7 @@ class AnimePlayer:
 	@pre_action
 	def args_search(self):
 		def get_name(last):
-			last = last_viewed()
+			last = HistoryHandler().last_viewed()
 			if last:
 				last = last['Name']
 				return last.split('-')[0].strip()
@@ -76,10 +77,25 @@ class AnimePlayer:
 			return str(input('!Search Anime: '))
 		
 		def history(*args, **kwargs):
-			data = json.dumps(read_history(), indent=4, ensure_ascii=False)
+			data = json.dumps(HistoryHandler().read_history(), indent=4, ensure_ascii=False)
 			print(data)
 			self.search_anime()
 		
+		def clearhistory(*args, **kwargs):
+			if input('Enter "clearhistory" to clear viewing history\n') == 'clearhistory':
+				HistoryHandler().delete_history()
+				print('Cleared viewing history.')
+			self.search_anime()
+
+		def clearcache(*args, **kwargs):
+			if input('Enter "clearcache" to clears all generated caches\n') == 'clearcache':
+				ClearAllCache(['anime_player.log'])
+				print('Cleared all cache. Exiting in 3 seconds...')
+				sleep(3)
+				os._exit(0)
+			else:
+				self.search_anime()
+
 		def ans(query):
 			result = search_def.get(query, query)
 			if callable(result):
@@ -90,7 +106,9 @@ class AnimePlayer:
 		search_def = {
 			'!last': get_name,
 			'!ask': ask,
-			'!history': history
+			'!history': history,
+			'!clearhistory': clearhistory,
+			'!clearcache': clearcache
 		}
 
 		if len(sys.argv) > 1 and self.is_args:
@@ -116,7 +134,7 @@ class AnimePlayer:
 				self.title = list(result.keys())[self.title-1]
 			self.code = href.split('/')[-1].split('.')[0]
 			self.ep_list = eps(self.host, href)
-			watched = get_watching_status(self.code)
+			watched = HistoryHandler().get_watching_status(self.code)
 			self.url, self.ep_selected, self.total_ep = menudict(ask=f'{self.title}\nLast watched episode: {watched}' if watched != None else self.title, items=self.ep_list)
 			if self.ep_selected == -1:
 				clscr()
@@ -132,7 +150,7 @@ class AnimePlayer:
 - Fast forward x2: Hold (1sec) right side (Hold F)
 - Forward 85s (skip OP/EN): click top side (W)
 - Move window: drag down side''')
-			handle_anime_history(self.title, self.ep_list, self.ep_selected, self.code)
+			HistoryHandler().handle_anime_history(self.title, self.ep_list, self.ep_selected, self.code)
 			PLAYER().player(self.anime_name, self.video_url, self.track_lst, self.hsize, self.wsize)
 			self.show_actions_menu()
 		else:
@@ -143,14 +161,14 @@ class AnimePlayer:
 	@pre_action
 	def show_actions_menu(self):
 		self.log_info()
-		opts = menu(ask=f'{self.title}\nCurrent Episode: {self.ep_selected} ({get_watching_status(self.code)})', items=['Next Episode', 'Previous Episode', 'Replay', 'Open in webview', 'Search Anime', 'Exit'])
+		opts = menu(ask=f'{self.title}\nCurrent Episode: {self.ep_selected} ({HistoryHandler().get_watching_status(self.code)})', items=['Next Episode', 'Previous Episode', 'Replay', 'Open in webview', 'Search Anime', 'Exit'])
 		if opts == 0:  # Next
 			self.next_episode()
 		elif opts == 1:  # Previous
 			self.previous_episode()
 		elif opts == 2:  # Replay
 			clscr()
-			handle_anime_history(self.title, self.ep_list, self.ep_selected, self.code)
+			HistoryHandler().handle_anime_history(self.title, self.ep_list, self.ep_selected, self.code)
 			PLAYER().player(self.anime_name, self.video_url, self.track_lst, self.hsize, self.wsize)
 			self.show_actions_menu()
 		elif opts == 3:  # Open in webview
@@ -176,7 +194,7 @@ class AnimePlayer:
 			self.js_code = get_source(self.url)
 			self.get_info()
 			clscr()
-			handle_anime_history(self.title, self.ep_list, self.ep_selected, self.code)
+			HistoryHandler().handle_anime_history(self.title, self.ep_list, self.ep_selected, self.code)
 			PLAYER().player(self.anime_name, self.video_url, self.track_lst, self.hsize, self.wsize)
 			self.show_actions_menu()
 
@@ -192,7 +210,7 @@ class AnimePlayer:
 			self.js_code = get_source(self.url)
 			self.get_info()
 			clscr()
-			handle_anime_history(self.title, self.ep_list, self.ep_selected, self.code)
+			HistoryHandler().handle_anime_history(self.title, self.ep_list, self.ep_selected, self.code)
 			player(self.anime_name, self.video_url, self.track_lst, self.hsize, self.wsize)
 			self.show_actions_menu()
 
@@ -204,13 +222,13 @@ def main():
 	debug = config.get_bool('DEBUG')
 
 	if check_connection(f'https://{host}/'):
-		time.sleep(0.5)
+		sleep(0.5)
 		clscr()
 	else:
 		return check_connection
 
 	anime_player = AnimePlayer(host, hsize, wsize, debug=debug)
-	in4 = last_viewed()
+	in4 = HistoryHandler().last_viewed()
 	if in4:
 		print(f'''Last watched: {in4['Name']}\nEpisode: {in4['Watching']}\nTime: {in4['Time']}''')
 		print('Tip: use "!last" to quickly find the most recently watched anime.')
