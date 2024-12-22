@@ -105,6 +105,43 @@ class PLAYER:
 			if os.path.exists(file):
 				os.remove(file)
 
+	def download_subtitles(self, track_lst_copy):
+		# Download subtitles to avoid CORS
+		for track in track_lst_copy:
+			url = track['file']
+			name = url.split('/')[-1]
+			subtitles_file = os.path.join(os.getcwd(), self.subtitles_path, name)
+			response = requests.get(url)
+			with open(subtitles_file, 'wb') as f:
+				f.write(response.content)
+			self.delete_subtitles.append(subtitles_file)
+			track['file'] = os.path.join('./', self.subtitles_path, name).replace('\\', '/')
+
+		track_lst_copy = json.dumps(track_lst_copy)
+		return track_lst_copy
+
+	def create_html(self, track_lst_copy, video_url):
+		with open(self.html_file, 'r', encoding='utf-8') as file:
+			html_content = file.read()
+
+		html_content = html_content.replace("{{video_url}}", video_url)
+
+		if track_lst_copy == False:
+			html_content = html_content.replace("{{track_lst}}", 'false')
+		else:
+			track_lst_copy = self.download_subtitles(track_lst_copy)
+			html_content = html_content.replace("{{track_lst}}", track_lst_copy)
+
+			# vtt-tools plugins here
+			VTTplugins(self).apply_plugins()
+
+		if (not self.wv_supported) and (not _config.get_bool('FORCE_GESTURE')):
+			html_content = html_content.replace('controlsList="nofullscreen"', '')
+			html_content = html_content.replace('var isFeatureEnabled = true', 'var isFeatureEnabled = false')
+			
+		with open(self.temp_html, 'w', encoding='utf-8') as file:
+			file.write(html_content)
+
 	def start_player(self, anime_name, hsize, wsize):
 		PORT = _config.get('PORT')
 		match = re.match(r"randint\(\s*(\d+)\s*,\s*(\d+)\s*\)", PORT)
@@ -141,41 +178,7 @@ class PLAYER:
 		self.clean_cache()
 		self.create_sub_path()
 
-		with open(self.html_file, 'r', encoding='utf-8') as file:
-			html_content = file.read()
-
-		html_content = html_content.replace("{{video_url}}", video_url)
-
-		if track_lst_copy == False:
-			html_content = html_content.replace("{{track_lst}}", 'false')
-		else:
-
-			# Download subtitles to avoid CORS
-			for track in track_lst_copy:
-				url = track['file']
-				name = url.split('/')[-1]
-				subtitles_file = os.path.join(os.getcwd(), self.subtitles_path, name)
-				response = requests.get(url)
-				with open(subtitles_file, 'wb') as f:
-					f.write(response.content)
-				self.delete_subtitles.append(subtitles_file)
-				track['file'] = os.path.join('./', self.subtitles_path, name).replace('\\', '/')
-
-			track_lst_copy = json.dumps(track_lst_copy)
-			html_content = html_content.replace("{{track_lst}}", track_lst_copy)
-
-			if _config.get_bool('ADFILTER'):
-				for file in self.delete_subtitles:
-					bak_file = backupfile(file)
-					if adfilter(bak_file):
-						applybackup(bak_file)
-
-		if (not self.wv_supported) and (not _config.get_bool('FORCE_GESTURE')):
-			html_content = html_content.replace('controlsList="nofullscreen"', '')
-			html_content = html_content.replace('var isFeatureEnabled = true', 'var isFeatureEnabled = false')
-			
-		with open(self.temp_html, 'w', encoding='utf-8') as file:
-			file.write(html_content)
+		self.create_html(track_lst_copy, video_url)
 
 		self.start_player(anime_name, hsize, wsize)
 		self.clean_session_cache()
@@ -198,6 +201,22 @@ class PLAYER:
 
 		self.start_player(anime_name, hsize, wsize)
 		self.clean_session_cache()
+
+class VTTplugins:
+	def __init__(self, Player):
+		self.Player = Player
+		self.plugins = [self.safe_adfilter]
+
+	def apply_plugins(self):
+		for plugin in self.plugins:
+			plugin()
+
+	def safe_adfilter(self):
+		if _config.get_bool('ADFILTER'):
+			for file in self.Player.delete_subtitles:
+				bak_file = backupfile(file)
+				if adfilter(bak_file):
+					applybackup(bak_file)
 
 def search(host, query):
 	def search_by_query(query, movie_dict):
@@ -372,7 +391,7 @@ class HistoryHandler:
 		if os.path.exists(self.filename):
 			os.remove(self.filename)
 
-def ClearAllCache(custom_delete=False):
+def ClearAllCache(custom_delete=[]):
 	PLAYER().clean_session_cache()
 	os.rmdir(PLAYER().subtitles_path)
 	HistoryHandler().delete_history()
