@@ -28,3 +28,5 @@ $ python main.py '!last'
 - `!last`: View last watched anime
 - `!ask`: Enter raw search mode (treat query commands such as `!ask` and `!last` as search content)
 - `!history`: Show viewing history
+- `!clearhistory`: Clear viewing history
+- `!clearcache`: Clears all generated caches, including session cache, subtitle files, viewing history, and debug files.

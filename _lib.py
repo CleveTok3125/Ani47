@@ -309,57 +309,73 @@ def check_connection(url):
 		print(f"An error occurred: {e}")
 	return False
 
-def handle_anime_history(anime_name, ep_list, ep_selected, code, filename=os.path.normpath("./history.json")):
-	if not _config.get_bool('HISTORY'):
-		return 'History is disabled'
+class HistoryHandler:
+	def __init__(self):
+		self.filename = os.path.normpath("./history.json")
 
-	ep_list = list(ep_list.keys())
-	watching = ep_list[ep_selected - 1]
-	
-	try:
-		with open(filename, "r", encoding="utf-8") as file:
-			anime_dict = json.load(file)
-	except FileNotFoundError:
-		anime_dict = {}
+	def handle_anime_history(self, anime_name, ep_list, ep_selected, code):
+		if not _config.get_bool('HISTORY'):
+			return 'History is disabled'
 
-	existing_anime = next((anime for anime in anime_dict.values() if anime["Code"] == code), None)
+		ep_list = list(ep_list.keys())
+		watching = ep_list[ep_selected - 1]
+		
+		try:
+			with open(self.filename, "r", encoding="utf-8") as file:
+				anime_dict = json.load(file)
+		except FileNotFoundError:
+			anime_dict = {}
 
-	if existing_anime is None:
-		anime_info = {
-			"Name": anime_name,
-			"Code": code,
-			"Watching": watching,
-			"Episodes": ep_list,
-			"Time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-		}
-		anime_dict[len(anime_dict)] = anime_info
-	else:
-		if existing_anime["Watching"] != watching:
-			existing_anime["Watching"] = watching
-		existing_anime["Time"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+		existing_anime = next((anime for anime in anime_dict.values() if anime["Code"] == code), None)
 
-	with open(filename, "w", encoding="utf-8") as file:
-		json.dump(anime_dict, file, ensure_ascii=False, indent=4)
+		if existing_anime is None:
+			anime_info = {
+				"Name": anime_name,
+				"Code": code,
+				"Watching": watching,
+				"Episodes": ep_list,
+				"Time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+			}
+			anime_dict[len(anime_dict)] = anime_info
+		else:
+			if existing_anime["Watching"] != watching:
+				existing_anime["Watching"] = watching
+			existing_anime["Time"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-def get_watching_status(code):
-	anime_dict = read_history()
-	if anime_dict != None:
-		for anime in anime_dict.values():
-			if anime["Code"] == code:
-				return anime["Watching"]
-	return None
+		with open(self.filename, "w", encoding="utf-8") as file:
+			json.dump(anime_dict, file, ensure_ascii=False, indent=4)
 
-def last_viewed():
-	anime_data = read_history()
-	if anime_data != None:
-		max_index = max(anime_data.values(), key=lambda x: datetime.strptime(x["Time"], "%Y-%m-%d %H:%M:%S"))
-		return max_index
-	return None
-
-def read_history(filename=os.path.normpath("./history.json")):
-	try:
-		with open(filename, "r", encoding="utf-8") as file:
-			anime_dict = json.load(file)
-		return anime_dict
-	except FileNotFoundError:
+	def get_watching_status(self, code):
+		anime_dict = self.read_history()
+		if anime_dict != None:
+			for anime in anime_dict.values():
+				if anime["Code"] == code:
+					return anime["Watching"]
 		return None
+
+	def last_viewed(self):
+		anime_data = self.read_history()
+		if anime_data != None:
+			max_index = max(anime_data.values(), key=lambda x: datetime.strptime(x["Time"], "%Y-%m-%d %H:%M:%S"))
+			return max_index
+		return None
+
+	def read_history(self):
+		try:
+			with open(self.filename, "r", encoding="utf-8") as file:
+				anime_dict = json.load(file)
+			return anime_dict
+		except FileNotFoundError:
+			return None
+
+	def delete_history(self):
+		if os.path.exists(self.filename):
+			os.remove(self.filename)
+
+def ClearAllCache(custom_delete=False):
+	PLAYER().clean_session_cache()
+	os.rmdir(PLAYER().subtitles_path)
+	HistoryHandler().delete_history()
+	for file in custom_delete:
+		if os.path.exists(file):
+			os.remove(file)
