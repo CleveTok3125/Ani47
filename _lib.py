@@ -1,7 +1,11 @@
 from urllib.parse import urljoin
 from datetime import datetime
 from copy import deepcopy
-import requests, re, os, sys, json, threading
+import re, os, sys, json, threading
+
+import requests
+# import webview
+
 from config import Config
 from server import *
 from vtt_tools import *
@@ -65,103 +69,135 @@ def fetch(host, js_code):
 		print("Request failed:", response.status_code)
 		return False
 
-def player(anime_name, video_url, track_lst, hsize, wsize):
-	wv_supported = _config.get_bool('PYWEBVIEW')
-	if wv_supported:
-		try:
-				import webview
-		except ModuleNotFoundError:
-			wv_supported = False
-
-	print(f'Playing {anime_name}...')
-
-	# Work with copies to avoid changing the original
-	track_lst_copy = deepcopy(track_lst)
-
-	abs_path = os.path.dirname(os.path.abspath(__file__))
-	html_file = os.path.join(abs_path, './player.html') # main, lib and player must be in the same directory
-	temp_html = os.path.normpath('./index.html')
-	subtitles_path = os.path.normpath('./subtitles/')
-	delete_subtitles = []
-
-	if os.path.exists(temp_html):
-		def force_remove(temp_html):
-			try:
-				os.remove(temp_html)
-			except OSError as e:
-				input(f'Please close all {os.path.join(os.getcwd(), temp_html)} related tasks.\n{e}\n')
-				force_remove(temp_html)
-	if not os.path.exists(subtitles_path):
-		os.mkdir(subtitles_path)
-
-	with open(html_file, 'r', encoding='utf-8') as file:
-		html_content = file.read()
-
-	html_content = html_content.replace("{{video_url}}", video_url)
-
-	if track_lst_copy == False:
-		html_content = html_content.replace("{{track_lst}}", 'false')
-	else:
-
-		# Download subtitles to avoid CORS
-		for track in track_lst_copy:
-			url = track['file']
-			name = url.split('/')[-1]
-			subtitles_file = os.path.join(os.getcwd(), subtitles_path, name)
-			response = requests.get(url)
-			with open(subtitles_file, 'wb') as f:
-				f.write(response.content)
-			delete_subtitles.append(subtitles_file)
-			track['file'] = os.path.join('./', subtitles_path, name).replace('\\', '/')
-
-		track_lst_copy = json.dumps(track_lst_copy)
-		html_content = html_content.replace("{{track_lst}}", track_lst_copy)
-
-		if _config.get_bool('ADFILTER'):
-			for file in delete_subtitles:
-				bak_file = backupfile(file)
-				if adfilter(bak_file):
-					applybackup(bak_file)
-
-	if (not wv_supported) and (not _config.get_bool('FORCE_GESTURE')):
-		html_content = html_content.replace('controlsList="nofullscreen"', '')
-		html_content = html_content.replace('var isFeatureEnabled = true', 'var isFeatureEnabled = false')
+class PLAYER:
+	def __init__(self):
+		abs_path = os.path.dirname(os.path.abspath(__file__))
+		self.wv_supported = _config.get_bool('PYWEBVIEW')
+		self.html_file = os.path.join(abs_path, './player.html') # main, lib and player must be in the same directory
+		self.temp_html = os.path.normpath('./index.html')
+		self.subtitles_path = os.path.normpath('./subtitles/')
+		self.delete_subtitles = []
 		
-	with open(temp_html, 'w', encoding='utf-8') as file:
-		file.write(html_content)
+		if self.wv_supported:
+			try:
+				import webview
+				self.webview = webview
+			except ModuleNotFoundError:
+				self.wv_supported = False
 
-	# START PLAYER #
-	PORT = _config.get('PORT')
-	match = re.match(r"randint\(\s*(\d+)\s*,\s*(\d+)\s*\)", PORT)
-	if match:
-		from random import randint
-		PORT = randint(int(match.group(1)), int(match.group(2)))
-	else:
-		PORT = int(PORT)
-	share = _config.get_bool('LOCAL_SHARE')
-	if not wv_supported:
-		print('Pywebview is not supported.')
+	def clean_cache(self):
+		if os.path.exists(self.temp_html):
+			def force_remove():
+				try:
+					os.remove(self.temp_html)
+				except OSError as e:
+					input(f'Please close all {os.path.join(os.getcwd(), self.temp_html)} related tasks.\n{e}\n')
+					force_remove()
 
-	if wv_supported:
-		local_url = urljoin(f'http://127.0.0.1:{PORT}/', temp_html)
-		server_thread = threading.Thread(target=lambda: start_server(PORT=PORT, share=share))
-		server_thread.daemon = True
-		webview.create_window(anime_name, local_url, width=wsize, height=hsize, resizable=True, easy_drag=True)
+	def create_sub_path(self):
+		if not os.path.exists(self.subtitles_path):
+			os.mkdir(self.subtitles_path)
 
-		server_thread.start()
-		webview.start(debug=_config.get_bool('DEBUG'))
-	else:
-		print('Local server is running... (CTRL-C to stop)')
-		try:
-			start_server(PORT=PORT, share=share)
-		except KeyboardInterrupt:
-			pass
-	# END #
+	def clean_session_cache(self):
+		if os.path.exists(self.temp_html):
+			os.remove(self.temp_html)
+		for file in self.delete_subtitles:
+			if os.path.exists(file):
+				os.remove(file)
 
-	os.remove(temp_html)
-	for file in delete_subtitles:
-		if os.path.exists(file):
-			os.remove(file)
+	def start_player(self, anime_name, hsize, wsize):
+		PORT = _config.get('PORT')
+		match = re.match(r"randint\(\s*(\d+)\s*,\s*(\d+)\s*\)", PORT)
+		if match:
+			from random import randint
+			PORT = randint(int(match.group(1)), int(match.group(2)))
+		else:
+			PORT = int(PORT)
+		share = _config.get_bool('LOCAL_SHARE')
+		if not self.wv_supported:
+			print('Pywebview is not supported.')
+
+		if self.wv_supported:
+			local_url = urljoin(f'http://127.0.0.1:{PORT}/', self.temp_html)
+			server_thread = threading.Thread(target=lambda: start_server(PORT=PORT, share=share))
+			server_thread.daemon = True
+			self.webview.create_window(anime_name, local_url, width=wsize, height=hsize, resizable=True, easy_drag=True)
+
+			server_thread.start()
+			self.webview.start(debug=_config.get_bool('DEBUG'))
+		else:
+			print('Local server is running... (CTRL-C to stop)')
+			try:
+				start_server(PORT=PORT, share=share)
+			except KeyboardInterrupt:
+				pass
+
+	def player(self, anime_name, video_url, track_lst, hsize, wsize):
+		print(f'Playing {anime_name}...')
+
+		# Work with copies to avoid changing the original
+		track_lst_copy = deepcopy(track_lst)
+		
+		self.clean_cache()
+		self.create_sub_path()
+
+		with open(self.html_file, 'r', encoding='utf-8') as file:
+			html_content = file.read()
+
+		html_content = html_content.replace("{{video_url}}", video_url)
+
+		if track_lst_copy == False:
+			html_content = html_content.replace("{{track_lst}}", 'false')
+		else:
+
+			# Download subtitles to avoid CORS
+			for track in track_lst_copy:
+				url = track['file']
+				name = url.split('/')[-1]
+				subtitles_file = os.path.join(os.getcwd(), self.subtitles_path, name)
+				response = requests.get(url)
+				with open(subtitles_file, 'wb') as f:
+					f.write(response.content)
+				self.delete_subtitles.append(subtitles_file)
+				track['file'] = os.path.join('./', self.subtitles_path, name).replace('\\', '/')
+
+			track_lst_copy = json.dumps(track_lst_copy)
+			html_content = html_content.replace("{{track_lst}}", track_lst_copy)
+
+			if _config.get_bool('ADFILTER'):
+				for file in self.delete_subtitles:
+					bak_file = backupfile(file)
+					if adfilter(bak_file):
+						applybackup(bak_file)
+
+		if (not self.wv_supported) and (not _config.get_bool('FORCE_GESTURE')):
+			html_content = html_content.replace('controlsList="nofullscreen"', '')
+			html_content = html_content.replace('var isFeatureEnabled = true', 'var isFeatureEnabled = false')
+			
+		with open(self.temp_html, 'w', encoding='utf-8') as file:
+			file.write(html_content)
+
+		self.start_player(anime_name, hsize, wsize)
+		self.clean_session_cache()
+
+	def openINwebview(self, url, anime_name, hsize, wsize):
+		self.clean_session_cache()
+		html_content = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="refresh" content="0;url={url}">
+	<title>Redirecting...</title>
+</head>
+<body>
+	<p>If you are not redirected, <a href="{url}">click here</a>.</p>
+</body>
+</html>"""
+		with open(self.temp_html, 'w', encoding='utf-8') as file:
+			file.write(html_content)
+
+		self.start_player(anime_name, hsize, wsize)
+		self.clean_session_cache()
 
 def search(host, query):
 	def search_by_query(query, movie_dict):

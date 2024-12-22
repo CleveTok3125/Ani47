@@ -1,6 +1,7 @@
-from _lib import *
 from urllib.parse import urljoin
 import time, os, logging, sys
+
+from _lib import *
 from config import Config
 
 def pre_action(func):
@@ -132,7 +133,7 @@ class AnimePlayer:
 - Forward 85s (skip OP/EN): click top side (W)
 - Move window: drag down side''')
 			handle_anime_history(self.title, self.ep_list, self.ep_selected, self.code)
-			player(self.anime_name, self.video_url, self.track_lst, self.hsize, self.wsize)
+			PLAYER().player(self.anime_name, self.video_url, self.track_lst, self.hsize, self.wsize)
 			self.show_actions_menu()
 		else:
 			print('Anime not found.')
@@ -142,7 +143,7 @@ class AnimePlayer:
 	@pre_action
 	def show_actions_menu(self):
 		self.log_info()
-		opts = menu(ask=f'{self.title}\nCurrent Episode: {self.ep_selected} ({get_watching_status(self.code)})', items=['Next Episode', 'Previous Episode', 'Replay', 'Search Anime', 'Exit'])
+		opts = menu(ask=f'{self.title}\nCurrent Episode: {self.ep_selected} ({get_watching_status(self.code)})', items=['Next Episode', 'Previous Episode', 'Replay', 'Open in webview', 'Search Anime', 'Exit'])
 		if opts == 0:  # Next
 			self.next_episode()
 		elif opts == 1:  # Previous
@@ -150,11 +151,15 @@ class AnimePlayer:
 		elif opts == 2:  # Replay
 			clscr()
 			handle_anime_history(self.title, self.ep_list, self.ep_selected, self.code)
-			player(self.anime_name, self.video_url, self.track_lst, self.hsize, self.wsize)
+			PLAYER().player(self.anime_name, self.video_url, self.track_lst, self.hsize, self.wsize)
 			self.show_actions_menu()
-		elif opts == 3:  # Search
+		elif opts == 3:  # Open in webview
+			PLAYER().openINwebview(self.url, self.anime_name, self.hsize, self.wsize)
+			self.show_actions_menu()
+		elif opts == 4:  # Search
 			self.search_anime()
-		elif opts == 4:
+		elif opts == 5:
+			PLAYER().clean_session_cache()
 			os._exit(0)
 		else:
 			self.show_actions_menu()
@@ -172,7 +177,7 @@ class AnimePlayer:
 			self.get_info()
 			clscr()
 			handle_anime_history(self.title, self.ep_list, self.ep_selected, self.code)
-			player(self.anime_name, self.video_url, self.track_lst, self.hsize, self.wsize)
+			PLAYER().player(self.anime_name, self.video_url, self.track_lst, self.hsize, self.wsize)
 			self.show_actions_menu()
 
 	@pre_action
