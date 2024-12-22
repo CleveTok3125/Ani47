@@ -211,7 +211,7 @@ class AnimePlayer:
 			self.get_info()
 			clscr()
 			HistoryHandler().handle_anime_history(self.title, self.ep_list, self.ep_selected, self.code)
-			player(self.anime_name, self.video_url, self.track_lst, self.hsize, self.wsize)
+			PLAYER().player(self.anime_name, self.video_url, self.track_lst, self.hsize, self.wsize)
 			self.show_actions_menu()
 
 def main():
