@@ -1,6 +1,6 @@
 from urllib.parse import urljoin
 from time import sleep
-import os, logging, sys
+import logging, sys
 
 from _lib import *
 from config import Config
@@ -63,7 +63,7 @@ class AnimePlayer:
 			self.anime_name, self.video_url, self.track_lst = response
 		except Exception as e:
 			input(f'URL: {self.url}\n{e}\n')
-			os._exit(404)
+			exit(404)
 
 	@pre_action
 	def args_search(self):
@@ -92,9 +92,22 @@ class AnimePlayer:
 				ClearAllCache(['anime_player.log'])
 				print('Cleared all cache. Exiting in 3 seconds...')
 				sleep(3)
-				os._exit(0)
+				exit()
 			else:
 				self.search_anime()
+
+		def ex_exit(*args, **kwargs):
+			return exit(0)
+
+		def ex_which(*args, **kwargs):
+			w = which()
+			print('Current working directory:', w[0])
+			print('Absolute path:', w[1])
+			self.search_anime()
+
+		def clearscr(*args, **kwargs):
+			clscr()
+			self.search_anime()
 
 		def ans(query):
 			result = search_def.get(query, query)
@@ -108,7 +121,12 @@ class AnimePlayer:
 			'!ask': ask,
 			'!history': history,
 			'!clearhistory': clearhistory,
-			'!clearcache': clearcache
+			'!clearcache': clearcache,
+			'!exit': ex_exit,
+			'!which': ex_which,
+			'!where': ex_which,
+			'!cls': clearscr,
+			'!clear': clearscr
 		}
 
 		if len(sys.argv) > 1 and self.is_args:
@@ -178,7 +196,7 @@ class AnimePlayer:
 			self.search_anime()
 		elif opts == 5:
 			PLAYER().clean_session_cache()
-			os._exit(0)
+			exit()
 		else:
 			self.show_actions_menu()
 

@@ -30,3 +30,6 @@ $ python main.py '!last'
 - `!history`: Show viewing history
 - `!clearhistory`: Clear viewing history
 - `!clearcache`: Clears all generated caches, including session cache, subtitle files, viewing history, and debug files.
+- `!exit`: Exit
+- `!which` or `!where`: Returns the current working directory and absolute path
+- `!clear` or `!cls`: Clear screen
