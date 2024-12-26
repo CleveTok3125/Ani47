@@ -268,6 +268,15 @@ def clscr():
 	else:
 		os.system("clear")
 
+def exit(n):
+	return os._exit(n)
+
+def which():
+	return os.getcwd(), os.path.dirname(os.path.abspath(__file__))
+
+def where():
+	return which()
+
 def menu(items, ask=None):
 	items = list(items)
 	length = len(items)
