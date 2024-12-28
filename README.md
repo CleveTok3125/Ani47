@@ -6,6 +6,17 @@ $ git clone https://github.com/CleveTok3125/Ani47/
 $ cd Ani47
 $ pip install -r requirements.txt
 ```
+# Build
+- Linux:
+```bash
+$ pip install pyinstaller
+$ bash build.sh
+```
+- Windows:
+```cmd
+$ pip install pyinstaller
+$ build.cmd
+```
 # Usage
 Default:
 ```bash

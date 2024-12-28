@@ -1,6 +1,7 @@
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 from datetime import datetime
 from copy import deepcopy
+from time import sleep
 import re, os, sys, json, threading
 
 import requests
@@ -268,7 +269,7 @@ def clscr():
 	else:
 		os.system("clear")
 
-def exit(n):
+def exit(n=0):
 	return os._exit(n)
 
 def which():
@@ -320,17 +321,49 @@ def menudict(items, ask=None, presel=False, default='Ep ', reback=True):
 		except ValueError:
 			input('Invalid input. Please enter a number')
 
-def check_connection(url):
+def check_connection(url, backup=False):
+	bak_host = _config.get('BACKUP_HOST')
+	redirect = _config.get_bool('REDIRECT')
+
 	print('Checking connection...')
 	try:
-		response = requests.get(url, timeout=5)
+		if backup >= 2:
+			bak_host = False
+		if bak_host and redirect:
+			url = bak_host
+			print('Using BACKUP_HOST...')
+
+		response = requests.get(url, timeout=5, allow_redirects=redirect)
+		
 		if response.status_code == 200:
 			print("Connection successful!")
+
+			if not redirect:
+				return True
+			
+			original_domain = urlparse(url).netloc
+			final_domain = urlparse(response.url).netloc
+
+			if original_domain != final_domain and 'anime47' in str(final_domain):
+				_config.update_config('HOST', str(final_domain))
+				print(f'Redirected to new domain {final_domain}.\nUpdated in configuration file.')
+				sleep(2.5)
+			elif 'anime47' not in str(final_domain):
+				print('The redirected domain is suspicious.')
+				print(f'Check "{final_domain}" and update manually via configuration file if it is valid.')
+				print('Change the "REDIRECT" configuration to "False" if you do not want to change the HOST')
+				sleep(4.5)
+				return False
 			return True
 		else:
 			print(f"Error: Status code {response.status_code}")
 	except requests.ConnectionError:
 		print("Unable to connect to the network.")
+		
+		if bak_host and backup < 2 and redirect:
+			backup += 1
+			check_connection(url, backup=backup)
+
 	except requests.Timeout:
 		print("Connection timed out.")
 	except requests.RequestException as e:
