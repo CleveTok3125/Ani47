@@ -15,7 +15,7 @@ $ bash build.sh
 - Windows:
 ```cmd
 $ pip install pyinstaller
-$ bash build.sh
+$ build.cmd
 ```
 # Usage
 Default:
