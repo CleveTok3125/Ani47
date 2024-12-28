@@ -245,6 +245,8 @@ def main():
 	else:
 		return check_connection
 
+	host = config.get('HOST')
+
 	anime_player = AnimePlayer(host, hsize, wsize, debug=debug)
 	in4 = HistoryHandler().last_viewed()
 	if in4:
