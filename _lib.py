@@ -333,7 +333,7 @@ def check_connection(url, backup=False):
 			url = bak_host
 			print('Using BACKUP_HOST...')
 
-		response = requests.get(url, timeout=5, allow_redirects=True)
+		response = requests.get(url, timeout=5, allow_redirects=redirect)
 		
 		if response.status_code == 200:
 			print("Connection successful!")
