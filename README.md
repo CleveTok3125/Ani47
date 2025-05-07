@@ -1,3 +1,6 @@
+# This project is semi-abandoned
+The core is still working fine but since the site has aggregated content from many sources it is not easy to extract the content, so I have to abandon it. I would appreciate it if you help maintain this project.
+
 # Ani47
 CLI app to browse and watch on Anime47
 # Installation
